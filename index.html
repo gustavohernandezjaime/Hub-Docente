@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hub Docente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f4fb;--panel:#ffffff;--ink:#1f2333;--sub:#6b7280;--line:#e3e5f0;
+  --accent:#6d28d9;--accent2:#0891b2;--ok:#16a34a;--bad:#e11d48;--warn:#f59e0b;--just:#2563eb;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15131f;--panel:#201d2e;--ink:#f1eefb;--sub:#a9a3c2;--line:#332e47;
+}}
+:root[data-theme="dark"]{--bg:#15131f;--panel:#201d2e;--ink:#f1eefb;--sub:#a9a3c2;--line:#332e47;}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Lato',-apple-system,'Segoe UI',Roboto,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+header{padding:22px 16px 10px;text-align:center}
+header h1{margin:0;font-size:1.6rem;font-weight:900;color:var(--accent)}
+header p{margin:4px 0 0;color:var(--sub);font-size:.85rem}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px 12px;border-bottom:1px solid var(--line);top:env(safe-area-inset-top,0px);background:var(--bg);position:sticky;z-index:5}
+nav button{border:none;background:var(--panel);color:var(--ink);padding:9px 16px;
+  border-radius:20px;font-family:inherit;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+nav button.active{background:var(--accent);color:#fff}
+main{max-width:820px;margin:0 auto;padding:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(20,10,60,.05)}
+h2{font-size:1.15rem;margin:0 0 10px;font-weight:900}
+h3{font-size:.95rem;margin:14px 0 6px;color:var(--accent2);font-weight:700}
+label{display:block;font-size:.78rem;color:var(--sub);margin:10px 0 4px;font-weight:700}
+input:not([type=checkbox]):not([type=radio]),select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;
+  background:var(--bg);color:var(--ink);font-family:inherit;font-size:.95rem}
+input[type=checkbox],input[type=radio]{width:auto;flex-shrink:0;accent-color:var(--accent)}
+textarea{min-height:70px;resize:vertical}
+button.btn{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;
+  font-family:inherit;font-weight:700;cursor:pointer;font-size:.9rem;margin-top:8px}
+button.btn.secondary{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+button.btn.small{padding:6px 12px;font-size:.8rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row3{display:flex;gap:8px}
+.row3>*{flex:1}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.83rem}
+th,td{border:1px solid var(--line);padding:6px;text-align:left}
+th{background:var(--bg)}
+.tag{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.72rem;color:#fff;font-weight:700}
+.tag.present{background:var(--ok)}.tag.absent{background:var(--bad)}.tag.late{background:var(--warn)}
+.tag.justified{background:var(--just)}.tag.none{background:var(--sub)}
+.groupItem{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.muted{color:var(--sub);font-size:.85rem}
+.doc-preview{background:var(--bg);border:1px dashed var(--line);padding:16px;margin-top:10px;white-space:pre-wrap;font-size:.88rem}
+#micStatus{font-size:.85rem;color:var(--sub);margin-top:6px}
+.pulse{color:var(--accent);font-weight:bold}
+.chkrow{display:flex;align-items:center;gap:8px;font-size:.85rem;margin:6px 0;cursor:pointer}
+.critRow{display:flex;gap:6px;align-items:center;margin:4px 0}
+.critRow input[type=text]{flex:2}.critRow input[type=number]{flex:1}
+@media print{nav,header,.no-print{display:none!important}main{max-width:100%}.doc-preview{border:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Hub Docente</h1>
+  <p>Secundaria pública · Grupos · Asistencia por voz · Calificaciones NEM · Documentos</p>
+  <p style="font-size:.72rem;color:var(--sub);margin-top:2px">Tus datos se guardan solo en este navegador. Usa "Exportar CSV" en Asistencia/Calificaciones para respaldarlos.</p>
+</header>
+<nav class="no-print">
+  <button data-tab="grupos" class="active">Grupos</button>
+  <button data-tab="alumnos">Alumnos</button>
+  <button data-tab="asistencia">Asistencia</button>
+  <button data-tab="calif">Calificaciones</button>
+  <button data-tab="docs">Documentos</button>
+</nav>
+<main>
+
+<section id="tab-grupos">
+  <div class="card">
+    <h2>Respaldo en Google Drive</h2>
+    <p class="muted">Guarda tus datos en tu propia cuenta de Google Drive para no perderlos y pasarlos entre tus dispositivos. Cada persona que use este Hub conecta su propia cuenta; nadie ve los datos de nadie.</p>
+    <div class="row">
+      <button class="btn" id="btnDriveConnect">Conectar Google Drive</button>
+      <button class="btn secondary" id="btnDriveSave" style="display:none">Guardar en Drive</button>
+      <button class="btn secondary" id="btnDriveLoad" style="display:none">Cargar desde Drive</button>
+    </div>
+    <div id="driveStatus" class="muted" style="margin-top:6px"></div>
+  </div>
+  <div class="card">
+    <h2>Nuevo grupo</h2>
+    <div class="row3">
+      <div><label>Grado</label><select id="gGrado"><option>1°</option><option>2°</option><option>3°</option></select></div>
+      <div><label>Grupo(s)</label><input id="gGrupo" placeholder="A  o  A,B,C,D,E,F"></div>
+      <div><label>Asignatura</label><input id="gMateria" list="materiaList" placeholder="Ej. Artes"><datalist id="materiaList"></datalist></div>
+    </div>
+    <label>Alumnos (uno por línea — solo si das de alta un único grupo)</label><textarea id="gStudents" placeholder="Nombre del alumno 1&#10;Nombre del alumno 2"></textarea>
+    <p class="muted">Si un docente imparte la misma materia a varios grupos (ej. Artes a 3°A–3°F), escribe todas las letras separadas por coma para crearlos de una vez; después añade la lista de alumnos de cada uno por separado.</p>
+    <button class="btn" id="btnAddGroup">Crear grupo(s)</button>
+  </div>
+  <div class="card"><h2>Mis grupos</h2><div id="groupList" class="muted">Cargando…</div></div>
+</section>
+
+<section id="tab-alumnos" style="display:none">
+  <div class="card">
+    <h2>Buscar alumno</h2>
+    <input id="alBuscar" placeholder="Escribe un nombre…">
+    <div id="alResultados" class="muted" style="margin-top:8px"></div>
+  </div>
+  <div id="alFicha"></div>
+</section>
+
+<section id="tab-asistencia" style="display:none">
+  <div class="card">
+    <h2>Pase de lista</h2>
+    <label>Grupo</label><select id="aGroup"></select>
+    <div id="aQuickSwitch" class="row" style="margin-top:4px"></div>
+    <label>Fecha</label><input type="date" id="aDate">
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="btnVoice">🎤 Iniciar pase de lista por voz</button>
+      <button class="btn secondary" id="btnStopVoice" style="display:none">Detener</button>
+    </div>
+    <div id="micStatus"></div>
+    <div class="row" style="margin-top:6px">
+      <button class="btn secondary" id="btnQR">📷 Escanear código QR</button>
+      <button class="btn secondary" id="btnStopQR" style="display:none">Detener escaneo</button>
+    </div>
+    <div id="qrStatus" class="muted"></div>
+    <video id="qrVideo" playsinline muted style="width:100%;max-width:320px;border-radius:8px;display:none;margin-top:6px"></video>
+    <canvas id="qrCanvas" style="display:none"></canvas>
+    <label style="margin-top:10px">Buscar alumno</label><input id="aFilter" placeholder="Filtrar lista…">
+    <table id="aTable"><thead><tr><th>Alumno</th><th>Estado</th></tr></thead><tbody></tbody></table>
+    <button class="btn secondary" id="btnSaveAttendance">Guardar asistencia</button>
+    <button class="btn secondary" id="btnExportAttendance">Exportar asistencia (CSV)</button>
+  </div>
+</section>
+
+<section id="tab-calif" style="display:none">
+  <div class="card">
+    <h2>Calificaciones — evaluación trimestral (NEM)</h2>
+    <div class="row3">
+      <div><label>Grupo</label><select id="cGroup"></select></div>
+      <div><label>Trimestre</label><select id="cTrim"><option value="1">Trimestre 1</option><option value="2">Trimestre 2</option><option value="3">Trimestre 3</option></select></div>
+    </div>
+    <div id="cQuickSwitch" class="row" style="margin-top:4px"></div>
+    <h3>Criterios de evaluación del grupo</h3>
+    <div id="critEditor"></div>
+    <button class="btn small secondary" id="btnAddCrit">+ Agregar criterio</button>
+    <button class="btn small" id="btnSaveCrit">Guardar criterios</button>
+    <div id="critWarn" class="muted"></div>
+    <h3>Calificaciones del trimestre</h3>
+    <div id="califWrap"></div>
+    <button class="btn" id="btnSaveGrades">Guardar calificaciones</button>
+    <h3>Resumen anual</h3>
+    <div id="resumenWrap" class="muted">Selecciona un grupo.</div>
+    <button class="btn secondary" id="btnExportGrades">Exportar calificaciones (CSV)</button>
+  </div>
+</section>
+
+<section id="tab-docs" style="display:none">
+  <div class="card">
+    <h2>Planeación didáctica (NEM)</h2>
+    <div class="row3">
+      <div><label>Materia</label><select id="pCourse">
+        <option>Español</option><option>Matemáticas</option><option>Biología</option><option>Física</option><option>Química</option>
+        <option>Historia</option><option>Geografía</option><option>Formación Cívica y Ética</option><option>Inglés</option>
+        <option>Artes</option><option>Talleres</option><option>Tecnología</option><option>Integración Curricular</option>
+      </select></div>
+      <div><label>Grado</label><select id="pGrado"><option>1°</option><option>2°</option><option>3°</option></select></div>
+      <div><label>Trimestre</label><select id="pTrim"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+    </div>
+    <button class="btn small secondary" id="btnPlantilla" type="button">Usar plantilla estándar como propuesta</button>
+    <p class="muted">Rellena los campos con una propuesta genérica editable — revísala y ajústala a tu contenido real antes de generar.</p>
+    <label>Ejes articuladores (uno por línea)</label><textarea id="pEjes" placeholder="Inclusión&#10;Pensamiento crítico"></textarea>
+    <label>Contenidos (uno por línea)</label><textarea id="pUnidades"></textarea>
+    <label>PDA / Procesos de desarrollo de aprendizaje (uno por línea)</label><textarea id="pPDA"></textarea>
+    <label>Metodología / secuencia de actividades</label><textarea id="pMetodo"></textarea>
+    <label>Recursos (uno por línea)</label><textarea id="pRecursos"></textarea>
+    <label>Evaluación / instrumentos (uno por línea)</label><textarea id="pEval"></textarea>
+    <button class="btn" id="btnPlan">Generar planeación</button>
+    <div id="planPreview" class="doc-preview" style="display:none"></div>
+    <button class="btn secondary no-print" id="btnPrintPlan" style="display:none">Imprimir / Guardar PDF</button>
+  </div>
+  <div class="card">
+    <h2>Citatorio</h2>
+    <div class="row3">
+      <div><label>Grupo</label><select id="citGroup"></select></div>
+      <div><label>Alumno</label><select id="citStudent"></select></div>
+    </div>
+    <label>Dirigido a</label>
+    <select id="citDirigido"><option value="tutor">Padre/Madre o Tutor</option><option value="alumno">Alumno directamente</option><option value="ambos">Ambos</option></select>
+    <label>Nombre del padre/madre/tutor (opcional)</label><input id="citTutorNombre" placeholder="Si se deja en blanco, se usa 'Padre/Madre o Tutor de [alumno]'">
+    <label>Motivo(s)</label>
+    <div id="citMotivos">
+      <label class="chkrow"><input type="checkbox" value="Inasistencias reiteradas"><span>Inasistencias reiteradas</span></label>
+      <label class="chkrow"><input type="checkbox" value="Conducta"><span>Conducta</span></label>
+      <label class="chkrow"><input type="checkbox" value="Bajo rendimiento académico"><span>Bajo rendimiento académico</span></label>
+      <label class="chkrow"><input type="checkbox" value="Entrega de documentos"><span>Entrega de documentos</span></label>
+      <label class="chkrow"><input type="checkbox" value="Otro"><span>Otro</span></label>
+    </div>
+    <label>Detalles</label><textarea id="citDetalle"></textarea>
+    <div class="row3">
+      <div><label>Fecha de cita</label><input type="date" id="citFecha"></div>
+      <div><label>Hora</label><input type="time" id="citHora"></div>
+      <div><label>Lugar</label><input id="citLugar" placeholder="Dirección / Prefectura"></div>
+    </div>
+    <button class="btn" id="btnCitatorio">Generar citatorio</button>
+    <div id="citPreview" class="doc-preview" style="display:none"></div>
+    <button class="btn secondary no-print" id="btnPrintCit" style="display:none">Imprimir / Guardar PDF</button>
+  </div>
+</section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const uid=()=>crypto.randomUUID();
+const DEFAULT_CRIT=[{name:'Participación',weight:20},{name:'Tareas/Actividades',weight:20},{name:'Proyecto',weight:30},{name:'Examen',weight:30}];
+
+// Almacenamiento local (en este navegador) — sin necesidad de cuenta de Claude
+const LSKEY='hubDocenteData';
+function lsLoad(){ try{ return JSON.parse(localStorage.getItem(LSKEY)||'{}'); }catch(e){ return {}; } }
+function lsSave(data){ localStorage.setItem(LSKEY, JSON.stringify(data)); }
+function makeDb(){
+  function docRef(path){
+    const idx=path.indexOf('/'); const coll=path.slice(0,idx), id=path.slice(idx+1);
+    return {
+      async get(){ const data=lsLoad(); const val=(data[coll]||{})[id]; return { exists: val!==undefined, data:()=>val }; },
+      async set(val){ const data=lsLoad(); data[coll]=data[coll]||{}; data[coll][id]=val; lsSave(data); },
+      async update(patch){ const data=lsLoad(); data[coll]=data[coll]||{}; data[coll][id]=Object.assign({},data[coll][id]||{},patch); lsSave(data); },
+      async delete(){ const data=lsLoad(); if(data[coll]) delete data[coll][id]; lsSave(data); }
+    };
+  }
+  function collRef(coll){
+    return {
+      async get(){ const data=lsLoad(); const obj=data[coll]||{}; return { docs: Object.keys(obj).map(id=>({id,data:()=>obj[id]})) }; },
+      where(field,op,val){ return { async get(){ const data=lsLoad(); const obj=data[coll]||{};
+        const docs=Object.keys(obj).filter(id=>obj[id]&&obj[id][field]===val).map(id=>({id,data:()=>obj[id]})); return { docs }; } }; }
+    };
+  }
+  return { doc:docRef, collection:collRef };
+}
+let db=makeDb(), groups=[];
+
+async function initDb(){
+  await loadGroups();
+}
+async function loadGroups(){
+  const wrap=document.getElementById('groupList');
+  if(!db){ wrap.textContent='Almacenamiento no disponible en esta vista.'; return; }
+  try{
+    const snap = await db.collection('groups').get();
+    groups = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  }catch(e){ groups=[]; }
+  renderGroups(); fillGroupSelects(); fillMateriaList();
+}
+function fillMateriaList(){
+  const materias=[...new Set(groups.map(g=>g.materia).filter(Boolean))].sort();
+  document.getElementById('materiaList').innerHTML=materias.map(m=>`<option value="${m}">`).join('');
+}
+function renderGroups(){
+  const wrap=document.getElementById('groupList');
+  if(!groups.length){ wrap.innerHTML='<span class="muted">Aún no hay grupos.</span>'; return; }
+  wrap.innerHTML='';
+  const byMateria={};
+  groups.forEach(g=>{ const k=g.materia||'(sin asignatura)'; (byMateria[k]=byMateria[k]||[]).push(g); });
+  Object.keys(byMateria).sort().forEach(materia=>{
+    const h=document.createElement('h3'); h.textContent=materia; wrap.appendChild(h);
+    byMateria[materia].sort((a,b)=>a.name.localeCompare(b.name)).forEach(g=>{
+      const row=document.createElement('div'); row.className='groupItem';
+      row.innerHTML=`<div><strong>${g.name}</strong><div class="muted">${(g.students||[]).length} alumnos</div></div>`;
+      const editBtn=document.createElement('button'); editBtn.className='btn small secondary'; editBtn.textContent='Editar alumnos';
+      editBtn.onclick=()=>openRosterEditor(g);
+      const qrBtn=document.createElement('button'); qrBtn.className='btn small secondary'; qrBtn.textContent='Credenciales QR';
+      qrBtn.onclick=()=>openQRCredenciales(g);
+      const del=document.createElement('button'); del.className='btn small secondary'; del.textContent='Eliminar';
+      del.onclick=async()=>{ if(confirm('¿Eliminar '+g.name+'?')){ await db.doc('groups/'+g.id).delete(); await loadGroups(); } };
+      row.appendChild(editBtn); row.appendChild(qrBtn); row.appendChild(del); wrap.appendChild(row);
+    });
+  });
+}
+function openRosterEditor(g){
+  const wrap=document.getElementById('groupList');
+  const box=document.createElement('div'); box.className='card'; box.style.marginTop='8px';
+  box.innerHTML=`<h3 style="margin-top:0">Alumnos de ${g.name} — ${g.materia||''}</h3>
+    <textarea id="rosterEdit">${(g.students||[]).map(s=>s.name).join('\n')}</textarea>
+    <div class="row"><button class="btn small" id="rosterSave">Guardar lista</button><button class="btn small secondary" id="rosterCancel">Cancelar</button></div>`;
+  wrap.parentNode.insertBefore(box, wrap.nextSibling);
+  document.getElementById('rosterCancel').onclick=()=>box.remove();
+  document.getElementById('rosterSave').onclick=async()=>{
+    const lines=document.getElementById('rosterEdit').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    const oldByName={}; (g.students||[]).forEach(s=>oldByName[normalize(s.name)]=s.id);
+    const students=lines.map(n=>({id:oldByName[normalize(n)]||uid(), name:n}));
+    if(db){ await db.doc('groups/'+g.id).update({students}); }
+    box.remove(); await loadGroups();
+  };
+}
+function openQRCredenciales(g){
+  const wrap=document.getElementById('groupList');
+  const box=document.createElement('div'); box.className='card'; box.style.marginTop='8px';
+  box.innerHTML=`<h3 style="margin-top:0">Credenciales QR — ${g.name} · ${g.materia||''}</h3>
+    <p class="muted">Cada QR identifica al alumno y al grupo. Imprímelas o que las guarden en su teléfono; al escanearlas en Asistencia se registra su presencia.</p>
+    <div class="row no-print"><button class="btn small" id="qrPrint">Imprimir credenciales</button><button class="btn small secondary" id="qrClose">Cerrar</button></div>
+    <div id="qrGrid" style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px"></div>`;
+  wrap.parentNode.insertBefore(box, wrap.nextSibling);
+  document.getElementById('qrClose').onclick=()=>box.remove();
+  document.getElementById('qrPrint').onclick=()=>window.print();
+  const grid=document.getElementById('qrGrid');
+  if(!(g.students||[]).length){ grid.innerHTML='<span class="muted">Este grupo no tiene alumnos aún.</span>'; return; }
+  g.students.forEach(s=>{
+    const cell=document.createElement('div'); cell.style.cssText='text-align:center;width:120px';
+    const qid='qrc-'+s.id;
+    cell.innerHTML=`<div id="${qid}"></div><div style="font-size:.75rem;margin-top:4px">${s.name}</div>`;
+    grid.appendChild(cell);
+    try{ new QRCode(document.getElementById(qid),{text:'AST|'+g.id+'|'+s.id,width:96,height:96}); }catch(e){}
+  });
+}
+function fillGroupSelects(){
+  ['aGroup','cGroup','citGroup'].forEach(id=>{
+    const sel=document.getElementById(id); const cur=sel.value;
+    sel.innerHTML=groups.map(g=>`<option value="${g.id}">${g.name} · ${g.materia||''}</option>`).join('');
+    if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  });
+  renderAttendanceTable(); renderCritEditor(); renderGradesTable(); renderResumen(); fillStudentSelect();
+  renderQuickSwitch('aGroup','aQuickSwitch'); renderQuickSwitch('cGroup','cQuickSwitch');
+}
+function renderQuickSwitch(selectId,wrapId){
+  const sel=document.getElementById(selectId); const g=currentGroup(sel.value); const wrap=document.getElementById(wrapId);
+  wrap.innerHTML='';
+  if(!g) return;
+  groups.filter(x=>x.materia===g.materia).sort((a,b)=>a.name.localeCompare(b.name)).forEach(x=>{
+    const b=document.createElement('button'); b.className='btn small'+(x.id===g.id?'':' secondary'); b.textContent=x.name;
+    b.onclick=()=>{ sel.value=x.id; sel.dispatchEvent(new Event('change')); };
+    wrap.appendChild(b);
+  });
+}
+document.getElementById('btnAddGroup').onclick=async()=>{
+  const grado=document.getElementById('gGrado').value;
+  const letras=document.getElementById('gGrupo').value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+  const materia=document.getElementById('gMateria').value.trim();
+  if(!letras.length) return alert('Escribe al menos una letra de grupo.');
+  const students=document.getElementById('gStudents').value.split('\n').map(s=>s.trim()).filter(Boolean).map(n=>({id:uid(),name:n}));
+  if(letras.length>1 && students.length) alert('Como diste de alta varios grupos a la vez, se crearán sin alumnos; añade la lista de cada uno con "Editar alumnos".');
+  if(db){
+    for(const letra of letras){
+      const name=grado+letra;
+      const st = letras.length===1 ? students : [];
+      await db.doc('groups/'+uid()).set({name,grado,grupo:letra,materia,students:st,criteria:DEFAULT_CRIT,createdAt:Date.now()});
+    }
+  }
+  document.getElementById('gGrupo').value=''; document.getElementById('gStudents').value='';
+  await loadGroups();
+};
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  ['grupos','alumnos','asistencia','calif','docs'].forEach(t=>document.getElementById('tab-'+t).style.display = t===b.dataset.tab?'block':'none');
+});
+
+// Attendance
+let attendanceState={};
+document.getElementById('aGroup').onchange=()=>{ renderQuickSwitch('aGroup','aQuickSwitch'); renderAttendanceTable(); };
+document.getElementById('aDate').valueAsDate=new Date();
+document.getElementById('aDate').onchange=renderAttendanceTable;
+document.getElementById('aFilter').oninput=renderAttendanceTable;
+function currentGroup(id){ return groups.find(g=>g.id===id); }
+async function renderAttendanceTable(){
+  const gid=document.getElementById('aGroup').value; const g=currentGroup(gid);
+  const tbody=document.querySelector('#aTable tbody'); tbody.innerHTML='';
+  if(!g) return;
+  const date=document.getElementById('aDate').value;
+  let saved=attendanceState;
+  if(db && date && !document.getElementById('aFilter').dataset.rendered){ try{ const d=await db.doc('attendance/'+gid+'_'+date).get(); saved=(d.exists&&d.data().records)||{}; attendanceState=saved; }catch(e){} }
+  const filter=(document.getElementById('aFilter').value||'').toLowerCase();
+  (g.students||[]).filter(s=>s.name.toLowerCase().includes(filter)).forEach(s=>{
+    const tr=document.createElement('tr'); const st=attendanceState[s.id]||'none';
+    tr.innerHTML=`<td>${s.name}</td><td>
+      <span class="tag ${st}" id="tag-${s.id}">${labelStatus(st)}</span>
+      <button class="btn small secondary no-print" data-s="${s.id}" data-v="present">✓</button>
+      <button class="btn small secondary no-print" data-s="${s.id}" data-v="absent">✗</button>
+      <button class="btn small secondary no-print" data-s="${s.id}" data-v="late">T</button>
+      <button class="btn small secondary no-print" data-s="${s.id}" data-v="justified">J</button>
+    </td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('button[data-s]').forEach(b=>b.onclick=()=>setStatus(b.dataset.s,b.dataset.v));
+}
+function labelStatus(s){return {present:'Presente',absent:'Ausente',late:'Retardo',justified:'Justificada',none:'Sin registro'}[s]||'Sin registro';}
+function setStatus(sid,v){ attendanceState[sid]=v; const tag=document.getElementById('tag-'+sid); if(tag){ tag.className='tag '+v; tag.textContent=labelStatus(v); } }
+document.getElementById('btnSaveAttendance').onclick=async()=>{
+  const gid=document.getElementById('aGroup').value, date=document.getElementById('aDate').value;
+  if(!gid||!date) return alert('Selecciona grupo y fecha.');
+  if(db){ await db.doc('attendance/'+gid+'_'+date).set({groupId:gid,date,records:attendanceState}); }
+  alert('Asistencia guardada.');
+};
+
+// Voice roll call
+let recog=null, listening=false;
+function initSpeech(){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR) return null;
+  const r=new SR(); r.lang='es-MX'; r.continuous=true; r.interimResults=false; return r; }
+function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+document.getElementById('btnVoice').onclick=()=>{
+  const gid=document.getElementById('aGroup').value; const g=currentGroup(gid);
+  if(!g||!(g.students||[]).length) return alert('Selecciona un grupo con alumnos.');
+  recog=initSpeech(); const status=document.getElementById('micStatus');
+  if(!recog){ status.textContent='El reconocimiento de voz no está disponible en este navegador.'; return; }
+  listening=true; document.getElementById('btnVoice').style.display='none'; document.getElementById('btnStopVoice').style.display='inline-block';
+  status.innerHTML='<span class="pulse">Escuchando…</span> nombre + "presente", "ausente", "retardo" o "justificada".';
+  recog.onresult=(e)=>{
+    const text=normalize(e.results[e.results.length-1][0].transcript);
+    let sw='present';
+    if(text.includes('ausente')) sw='absent';
+    else if(text.includes('retardo')||text.includes('tarde')) sw='late';
+    else if(text.includes('justific')) sw='justified';
+    let best=null,bestScore=0;
+    (g.students||[]).forEach(s=>{ const n=normalize(s.name); const parts=n.split(' ');
+      let score=text.includes(n)?n.length:parts.filter(p=>p.length>2&&text.includes(p)).join('').length;
+      if(score>bestScore){bestScore=score;best=s;} });
+    if(best&&bestScore>2){ setStatus(best.id,sw); status.innerHTML='<span class="pulse">Escuchando…</span> registrado: '+best.name+' → '+labelStatus(sw); }
+  };
+  recog.onerror=(e)=>{ status.textContent='Error de micrófono: '+e.error; };
+  recog.onend=()=>{ if(listening) recog.start(); };
+  recog.start();
+};
+document.getElementById('btnStopVoice').onclick=()=>{
+  listening=false; if(recog) recog.stop();
+  document.getElementById('btnVoice').style.display='inline-block'; document.getElementById('btnStopVoice').style.display='none';
+  document.getElementById('micStatus').textContent='Pase de lista detenido.';
+};
+
+// QR scan
+let qrStream=null, qrScanning=false, lastScan=0;
+document.getElementById('btnQR').onclick=async()=>{
+  const video=document.getElementById('qrVideo'), status=document.getElementById('qrStatus');
+  try{
+    qrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  }catch(e){ status.textContent='No se pudo acceder a la cámara: '+e.message; return; }
+  video.srcObject=qrStream; video.style.display='block'; await video.play();
+  qrScanning=true;
+  document.getElementById('btnQR').style.display='none'; document.getElementById('btnStopQR').style.display='inline-block';
+  status.textContent='Apunta la cámara a un código QR…';
+  requestAnimationFrame(tickQR);
+};
+function tickQR(){
+  if(!qrScanning) return;
+  const video=document.getElementById('qrVideo'), canvas=document.getElementById('qrCanvas');
+  if(video.readyState===video.HAVE_ENOUGH_DATA){
+    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+    const ctx=canvas.getContext('2d'); ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=window.jsQR&&jsQR(img.data,img.width,img.height);
+    if(code&&code.data) handleQRPayload(code.data);
+  }
+  requestAnimationFrame(tickQR);
+}
+async function handleQRPayload(data){
+  const now=Date.now(); if(now-lastScan<1200) return;
+  const parts=data.split('|'); if(parts[0]!=='AST'||parts.length<3) return;
+  const gid=parts[1], sid=parts[2]; const g=currentGroup(gid); if(!g) return;
+  lastScan=now;
+  const aSel=document.getElementById('aGroup');
+  if(aSel.value!==gid){ aSel.value=gid; renderQuickSwitch('aGroup','aQuickSwitch'); await renderAttendanceTable(); }
+  setStatus(sid,'present');
+  const date=document.getElementById('aDate').value;
+  if(db&&date){ db.doc('attendance/'+gid+'_'+date).set({groupId:gid,date,records:attendanceState}).catch(()=>{}); }
+  const st=(g.students||[]).find(x=>x.id===sid);
+  document.getElementById('qrStatus').innerHTML='<span class="pulse">Registrado:</span> '+(st?st.name:sid);
+}
+document.getElementById('btnStopQR').onclick=()=>{
+  qrScanning=false; if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream=null; }
+  document.getElementById('qrVideo').style.display='none';
+  document.getElementById('btnQR').style.display='inline-block'; document.getElementById('btnStopQR').style.display='none';
+  document.getElementById('qrStatus').textContent='Escaneo detenido.';
+};
+
+// Criteria editor
+function renderCritEditor(){
+  const gid=document.getElementById('cGroup').value; const g=currentGroup(gid);
+  const wrap=document.getElementById('critEditor'); wrap.innerHTML='';
+  if(!g) return;
+  (g.criteria||DEFAULT_CRIT).forEach((c,i)=>{
+    const row=document.createElement('div'); row.className='critRow';
+    row.innerHTML=`<input type="text" value="${c.name}" data-i="${i}" class="critName" placeholder="Nombre del criterio">
+      <input type="number" value="${c.weight}" data-i="${i}" class="critWeight" min="0" max="100">%
+      <button class="btn small secondary" data-del="${i}">✕</button>`;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ const crit=readCritEditor(); crit.splice(parseInt(b.dataset.del),1); paintCrit(crit); });
+  updateCritWarn();
+  wrap.querySelectorAll('input').forEach(inp=>inp.oninput=updateCritWarn);
+}
+function paintCrit(crit){ const g=currentGroup(document.getElementById('cGroup').value); if(g){ g.criteria=crit; renderCritEditor(); } }
+function readCritEditor(){
+  const names=[...document.querySelectorAll('.critName')], weights=[...document.querySelectorAll('.critWeight')];
+  return names.map((n,i)=>({name:n.value||('Criterio '+(i+1)), weight:parseFloat(weights[i].value)||0}));
+}
+function updateCritWarn(){
+  const crit=readCritEditor(); const sum=crit.reduce((a,c)=>a+c.weight,0);
+  document.getElementById('critWarn').textContent = sum===100? '✓ Suma de ponderaciones: 100%' : `Suma actual: ${sum}% (recomendado: 100%)`;
+}
+document.getElementById('btnAddCrit').onclick=()=>{ const crit=readCritEditor(); crit.push({name:'',weight:0}); paintCrit(crit); };
+document.getElementById('btnSaveCrit').onclick=async()=>{
+  const gid=document.getElementById('cGroup').value; if(!gid||!db) return;
+  const crit=readCritEditor();
+  await db.doc('groups/'+gid).update({criteria:crit});
+  const g=currentGroup(gid); if(g) g.criteria=crit;
+  renderGradesTable(); alert('Criterios guardados.');
+};
+
+// Grades
+document.getElementById('cGroup').onchange=()=>{ renderQuickSwitch('cGroup','cQuickSwitch'); renderCritEditor(); renderGradesTable(); renderResumen(); };
+document.getElementById('cTrim').onchange=renderGradesTable;
+let gradesDoc={};
+async function renderGradesTable(){
+  const gid=document.getElementById('cGroup').value; const g=currentGroup(gid); const trim=document.getElementById('cTrim').value;
+  const wrap=document.getElementById('califWrap'); wrap.innerHTML='';
+  if(!g) return;
+  if(db){ try{ const d=await db.doc('grades/'+gid).get(); gradesDoc=(d.exists&&d.data().records)||{}; }catch(e){ gradesDoc={}; } }
+  const crit=g.criteria||DEFAULT_CRIT;
+  const table=document.createElement('table');
+  table.innerHTML='<thead><tr><th>Alumno</th>'+crit.map(c=>`<th>${c.name} (${c.weight}%)</th>`).join('')+'<th>Trim.</th></tr></thead>';
+  const tbody=document.createElement('tbody');
+  (g.students||[]).forEach(s=>{
+    const rec=((gradesDoc[trim]||{})[s.id])||{};
+    let tds=`<td>${s.name}</td>`;
+    crit.forEach((c,i)=>{ tds+=`<td><input type="number" min="0" max="10" step="0.1" style="width:55px" data-s="${s.id}" data-c="${i}" value="${rec[i]??''}"></td>`; });
+    tds+=`<td class="muted" id="avg-${s.id}">—</td>`;
+    const tr=document.createElement('tr'); tr.innerHTML=tds; tbody.appendChild(tr);
+    tr.querySelectorAll('input').forEach(inp=>inp.oninput=()=>updateRowAvg(s.id,crit));
+    updateRowAvg(s.id,crit);
+  });
+  table.appendChild(tbody); wrap.appendChild(table);
+}
+function updateRowAvg(sid,crit){
+  let sum=0,wsum=0;
+  crit.forEach((c,i)=>{ const inp=document.querySelector(`input[data-s="${sid}"][data-c="${i}"]`); if(inp&&inp.value!==''){ sum+=parseFloat(inp.value)*c.weight; wsum+=c.weight; } });
+  const el=document.getElementById('avg-'+sid); if(el) el.textContent = wsum? (sum/wsum).toFixed(1) : '—';
+}
+document.getElementById('btnSaveGrades').onclick=async()=>{
+  const gid=document.getElementById('cGroup').value; const trim=document.getElementById('cTrim').value; if(!gid) return;
+  const recs={};
+  document.querySelectorAll('#califWrap input').forEach(inp=>{ const sid=inp.dataset.s,c=inp.dataset.c;
+    if(!recs[sid]) recs[sid]={}; if(inp.value!=='') recs[sid][c]=parseFloat(inp.value); });
+  gradesDoc[trim]=recs;
+  if(db){ await db.doc('grades/'+gid).set({records:gradesDoc}); }
+  renderResumen(); alert('Calificaciones guardadas.');
+};
+
+async function renderResumen(){
+  const gid=document.getElementById('cGroup').value; const g=currentGroup(gid);
+  const wrap=document.getElementById('resumenWrap'); wrap.innerHTML='';
+  if(!g){ wrap.textContent='Selecciona un grupo.'; return; }
+  let recs={}; if(db){ try{ const d=await db.doc('grades/'+gid).get(); recs=(d.exists&&d.data().records)||{}; }catch(e){} }
+  const crit=g.criteria||DEFAULT_CRIT;
+  const table=document.createElement('table');
+  table.innerHTML='<thead><tr><th>Alumno</th><th>T1</th><th>T2</th><th>T3</th><th>Promedio</th></tr></thead>';
+  const tbody=document.createElement('tbody');
+  (g.students||[]).forEach(s=>{
+    const trimAvgs=[1,2,3].map(t=>{ const r=((recs[t]||{})[s.id])||{}; let sum=0,wsum=0;
+      crit.forEach((c,i)=>{ if(r[i]!==undefined){ sum+=r[i]*c.weight; wsum+=c.weight; } });
+      return wsum? sum/wsum : null; });
+    const valid=trimAvgs.filter(v=>v!==null);
+    const gen=valid.length? (valid.reduce((a,b)=>a+b,0)/valid.length).toFixed(1) : '—';
+    tbody.innerHTML+=`<tr><td>${s.name}</td>${trimAvgs.map(v=>`<td>${v!==null?v.toFixed(1):'—'}</td>`).join('')}<td><strong>${gen}</strong></td></tr>`;
+  });
+  table.appendChild(tbody); wrap.appendChild(table);
+}
+
+// Documents: Planeación
+const PLANTILLAS={
+  'Español':{ejes:'Inclusión\nPensamiento crítico',cont:'Comprensión lectora del texto\nProducción de un texto propio',pda:'Identifica estructura y función del texto\nProduce un texto aplicando lo revisado',metodo:'Activación de saberes previos → lectura/análisis guiado → producción individual/colaborativa → socialización y retroalimentación.',rec:'Textos de referencia\nCuaderno de trabajo',ev:'Rúbrica de producción escrita\nLista de cotejo de participación'},
+  'Matemáticas':{ejes:'Pensamiento crítico',cont:'Planteamiento del concepto o problema\nResolución de ejercicios graduados\nAplicación a una situación real',pda:'Comprende el concepto o procedimiento\nResuelve problemas aplicando el algoritmo\nExplica su razonamiento',metodo:'Problema detonador → explicación del procedimiento → práctica guiada → práctica independiente → cierre grupal.',rec:'Ejercicios impresos\nMaterial manipulable/calculadora',ev:'Ejercicios resueltos\nExamen o cuestionario corto'},
+  'Biología':{ejes:'Vida saludable\nPensamiento crítico',cont:'Exploración de un proceso o sistema biológico\nObservación o práctica relacionada\nAnálisis de resultados',pda:'Describe el proceso o sistema estudiado\nRegistra observaciones de la práctica\nRelaciona el tema con la vida cotidiana',metodo:'Pregunta detonadora → exploración/práctica guiada → registro de datos → análisis y conclusiones.',rec:'Material de laboratorio o láminas\nHojas de registro',ev:'Reporte de práctica\nRúbrica de observación'},
+  'Física':{ejes:'Pensamiento crítico',cont:'Planteamiento del fenómeno físico\nExperimento o medición guiada\nAnálisis de resultados con datos',pda:'Explica el fenómeno con lenguaje científico\nRealiza mediciones y registra datos\nInterpreta resultados numéricos',metodo:'Pregunta detonadora → experimento/medición → registro y cálculo → conclusiones grupales.',rec:'Material de laboratorio o simulador\nCalculadora',ev:'Reporte de experimento\nProblemas resueltos'},
+  'Química':{ejes:'Pensamiento crítico\nVida saludable',cont:'Planteamiento del fenómeno o reacción química\nPráctica guiada\nAnálisis de resultados',pda:'Explica la reacción o proceso químico\nRealiza la práctica siguiendo protocolo de seguridad\nInterpreta resultados',metodo:'Pregunta detonadora → práctica de laboratorio con medidas de seguridad → registro → conclusiones.',rec:'Material y reactivos de laboratorio\nEquipo de protección',ev:'Reporte de práctica\nCuestionario'},
+  'Historia':{ejes:'Interculturalidad crítica',cont:'Contextualización del periodo o hecho histórico\nAnálisis de causas y consecuencias\nComparación de fuentes o perspectivas',pda:'Ubica el hecho en tiempo y espacio\nExplica causas y consecuencias\nAnaliza fuentes históricas',metodo:'Presentación del hecho con línea de tiempo → análisis de fuentes → discusión guiada → conclusión.',rec:'Líneas de tiempo, mapas históricos\nFuentes primarias/secundarias',ev:'Línea de tiempo o mapa conceptual\nEnsayo breve'},
+  'Geografía':{ejes:'Inclusión',cont:'Ubicación y características del espacio geográfico\nAnálisis de un fenómeno espacial\nRelación con la vida de la comunidad',pda:'Ubica el espacio en mapas\nExplica el fenómeno geográfico estudiado\nRelaciona el tema con su entorno',metodo:'Presentación con mapa → análisis de datos geográficos → trabajo con mapas/gráficas → conclusión.',rec:'Mapas, atlas, datos estadísticos',ev:'Mapa o gráfica elaborada\nCuestionario'},
+  'Formación Cívica y Ética':{ejes:'Igualdad de género\nInterculturalidad crítica',cont:'Análisis de una situación o dilema ético-social\nDiscusión de derechos y responsabilidades\nPropuesta de acción',pda:'Identifica el dilema o problemática\nArgumenta una postura respetuosa\nPropone una acción concreta',metodo:'Presentación del caso → análisis en equipo → debate guiado → propuesta y cierre.',rec:'Casos o noticias, marco legal básico',ev:'Participación en debate\nPostura escrita'},
+  'Inglés':{ejes:'Inclusión',cont:'Comprensión de un texto/audio en inglés\nPráctica de vocabulario y gramática\nProducción oral o escrita',pda:'Comprende ideas generales del texto/audio\nUsa el vocabulario y gramática del tema\nProduce un mensaje oral o escrito sencillo',metodo:'Warm-up → input (texto/audio) → práctica guiada → producción → feedback.',rec:'Audio/texto en inglés, tarjetas de vocabulario',ev:'Producción oral o escrita\nLista de cotejo'},
+  'Artes':{ejes:'Inclusión',cont:'Exploración de una técnica o lenguaje artístico\nProceso creativo individual o colectivo\nPresentación de la obra o producto',pda:'Explora la técnica o elemento artístico\nCrea una producción propia\nReflexiona sobre su proceso creativo',metodo:'Sensibilización con referente artístico → experimentación con la técnica → producción → muestra y retroalimentación.',rec:'Materiales artísticos según técnica\nReferentes visuales/sonoros',ev:'Rúbrica de proceso y producto\nAutoevaluación/reflexión'},
+  'Talleres':{ejes:'Vida saludable',cont:'Introducción a la actividad o herramienta del taller\nPráctica guiada\nProyecto o producto final',pda:'Identifica el uso de la herramienta/técnica\nAplica la técnica en la práctica\nElabora un producto propio',metodo:'Demostración → práctica guiada con supervisión → trabajo autónomo → presentación del producto.',rec:'Herramientas o material del taller\nEquipo de seguridad si aplica',ev:'Producto elaborado\nLista de cotejo de proceso'},
+  'Tecnología':{ejes:'Pensamiento crítico',cont:'Planteamiento de un problema técnico\nDiseño de una solución (bocetos/prototipo)\nConstrucción y prueba de la solución',pda:'Identifica el problema técnico a resolver\nDiseña una propuesta de solución\nConstruye y evalúa su prototipo',metodo:'Problema detonador → investigación/diseño → construcción del prototipo → prueba y mejora.',rec:'Material para prototipos, herramientas básicas',ev:'Prototipo o producto\nBitácora de diseño'},
+  'Integración Curricular':{ejes:'Inclusión\nPensamiento crítico',cont:'Definición de un problema o proyecto que cruce varias materias\nInvestigación y trabajo colaborativo\nPresentación integradora del resultado',pda:'Relaciona contenidos de distintas materias\nColabora en el desarrollo del proyecto\nComunica el resultado de forma integradora',metodo:'Planteamiento del proyecto → investigación y trabajo por equipos → asesoría docente → presentación final.',rec:'Recursos de las materias involucradas',ev:'Producto integrador\nRúbrica colaborativa'}
+};
+document.getElementById('btnPlantilla').onclick=()=>{
+  const t=PLANTILLAS[document.getElementById('pCourse').value]; if(!t) return;
+  document.getElementById('pEjes').value=t.ejes; document.getElementById('pUnidades').value=t.cont;
+  document.getElementById('pPDA').value=t.pda; document.getElementById('pMetodo').value=t.metodo;
+  document.getElementById('pRecursos').value=t.rec; document.getElementById('pEval').value=t.ev;
+};
+document.getElementById('btnPlan').onclick=()=>{
+  const materia=document.getElementById('pCourse').value;
+  const grado=document.getElementById('pGrado').value, trim=document.getElementById('pTrim').value;
+  const ejes=document.getElementById('pEjes').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const cont=document.getElementById('pUnidades').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const pda=document.getElementById('pPDA').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const metodo=document.getElementById('pMetodo').value;
+  const rec=document.getElementById('pRecursos').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const ev=document.getElementById('pEval').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  let txt=`PLANEACIÓN DIDÁCTICA — NUEVA ESCUELA MEXICANA\n\nMateria: ${materia}\nGrado: ${grado}\nTrimestre: ${trim}\nFecha de elaboración: ${new Date().toLocaleDateString('es-MX')}\n\nEjes articuladores:\n`;
+  ejes.forEach(e=>txt+=`  • ${e}\n`);
+  txt+=`\nContenidos:\n`; cont.forEach((c,i)=>txt+=`  ${i+1}. ${c}\n`);
+  txt+=`\nPDA (Procesos de Desarrollo de Aprendizaje):\n`; pda.forEach(p=>txt+=`  • ${p}\n`);
+  txt+=`\nMetodología / secuencia de actividades:\n${metodo||'—'}\n`;
+  txt+=`\nRecursos:\n`; rec.forEach(r=>txt+=`  • ${r}\n`);
+  txt+=`\nEvaluación / instrumentos:\n`; ev.forEach(e=>txt+=`  • ${e}\n`);
+  const p=document.getElementById('planPreview'); p.style.display='block'; p.textContent=txt;
+  document.getElementById('btnPrintPlan').style.display='inline-block';
+};
+document.getElementById('btnPrintPlan').onclick=()=>window.print();
+
+// Documents: Citatorio
+function fillStudentSelect(){
+  const gsel=document.getElementById('citGroup');
+  gsel.onchange=()=>{ const g=currentGroup(gsel.value); const ssel=document.getElementById('citStudent');
+    ssel.innerHTML=(g?.students||[]).map(s=>`<option value="${s.id}">${s.name}</option>`).join(''); };
+  gsel.onchange();
+}
+document.getElementById('btnCitatorio').onclick=async()=>{
+  const g=currentGroup(document.getElementById('citGroup').value);
+  const ssel=document.getElementById('citStudent'); const sid=ssel.value; const sname=ssel.options[ssel.selectedIndex]?.textContent||'(alumno)';
+  const dirigido=document.getElementById('citDirigido').value;
+  const tutorNombre=document.getElementById('citTutorNombre').value.trim();
+  const motivos=[...document.querySelectorAll('#citMotivos input:checked')].map(c=>c.value);
+  const detalle=document.getElementById('citDetalle').value;
+  const fecha=document.getElementById('citFecha').value, hora=document.getElementById('citHora').value, lugar=document.getElementById('citLugar').value;
+  let destinatario;
+  if(dirigido==='tutor') destinatario = tutorNombre || `Padre/Madre o Tutor(a) de ${sname}`;
+  else if(dirigido==='alumno') destinatario = sname;
+  else destinatario = `${tutorNombre||'Padre/Madre o Tutor(a)'} y alumno(a) ${sname}`;
+  const folio='CIT-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-'+Math.floor(Math.random()*900+100);
+  const txt=`CITATORIO\nFolio: ${folio}\n\n${new Date().toLocaleDateString('es-MX')}\n\nDirigido a: ${destinatario}\nAlumno(a): ${sname}\nGrado y grupo: ${g?g.name:'—'}   Asignatura: ${g?.materia||'—'}\n\nPor medio de la presente se le cita para tratar el(los) siguiente(s) asunto(s):\n${motivos.length? motivos.map(m=>'  • '+m).join('\n') : '  • (sin especificar)'}\n\nDetalles:\n${detalle||'—'}\n\nFecha de la cita: ${fecha||'(por definir)'}\nHora: ${hora||'(por definir)'}\nLugar: ${lugar||'(por definir)'}\n\nSe solicita puntual asistencia para dar seguimiento al asunto referido.\n\nAtentamente,\n_______________________\nDocente\n\n— — — — — — — — — — — — — — — —\nAcuse de recibido\nNombre: ______________________  Firma: ______________________  Fecha: __________`;
+  const p=document.getElementById('citPreview'); p.style.display='block'; p.textContent=txt;
+  document.getElementById('btnPrintCit').style.display='inline-block';
+  if(db && sid){
+    try{
+      const d=await db.doc('citatorios/'+sid).get();
+      const entries=(d.exists&&d.data().entries)||[];
+      entries.unshift({folio,fecha:new Date().toLocaleDateString('es-MX'),motivos,citaFecha:fecha,citaHora:hora,lugar,destinatario,text:txt});
+      await db.doc('citatorios/'+sid).set({entries});
+    }catch(e){}
+  }
+};
+document.getElementById('btnPrintCit').onclick=()=>window.print();
+
+// Alumnos: búsqueda global y ficha
+document.getElementById('alBuscar').oninput=(e)=>{
+  const q=normalize(e.target.value); const wrap=document.getElementById('alResultados');
+  document.getElementById('alFicha').innerHTML='';
+  if(!q){ wrap.innerHTML=''; return; }
+  const matches=[];
+  groups.forEach(g=>(g.students||[]).forEach(s=>{ if(normalize(s.name).includes(q)) matches.push({s,g}); }));
+  if(!matches.length){ wrap.innerHTML='Sin resultados.'; return; }
+  wrap.innerHTML='';
+  matches.forEach(({s,g})=>{
+    const b=document.createElement('button'); b.className='btn small secondary'; b.style.display='block'; b.style.marginBottom='4px';
+    b.textContent=`${s.name} — ${g.name} · ${g.materia||''}`;
+    b.onclick=()=>loadFicha(s,g);
+    wrap.appendChild(b);
+  });
+};
+async function loadFicha(s,g){
+  const wrap=document.getElementById('alFicha');
+  wrap.innerHTML=`<div class="card"><h2>${s.name}</h2><p class="muted">${g.name} · ${g.materia||''}</p><div id="fichaAsist">Cargando asistencia…</div><div id="fichaCalif">Cargando calificaciones…</div><h3>Citatorios</h3><div id="fichaCit" class="muted">Cargando…</div><h3>Observaciones</h3><div id="fichaObs" class="muted">Cargando…</div><textarea id="obsNueva" placeholder="Nueva observación…"></textarea><button class="btn small" id="obsGuardar">Agregar observación</button></div>`;
+  if(!db) return;
+  // Asistencia
+  try{
+    const snap=await db.collection('attendance').where('groupId','==',g.id).get();
+    const tally={present:0,absent:0,late:0,justified:0};
+    snap.docs.forEach(d=>{ const st=(d.data().records||{})[s.id]; if(st&&tally[st]!==undefined) tally[st]++; });
+    const total=tally.present+tally.absent+tally.late+tally.justified;
+    document.getElementById('fichaAsist').innerHTML=`<h3>Asistencia</h3>`+(total?`<span class="tag present">Presente: ${tally.present}</span> <span class="tag absent">Ausente: ${tally.absent}</span> <span class="tag late">Retardo: ${tally.late}</span> <span class="tag justified">Justificada: ${tally.justified}</span>`:'<span class="muted">Sin registros aún.</span>');
+  }catch(e){ document.getElementById('fichaAsist').textContent=''; }
+  // Calificaciones
+  try{
+    const d=await db.doc('grades/'+g.id).get(); const recs=(d.exists&&d.data().records)||{};
+    const crit=g.criteria||DEFAULT_CRIT;
+    let html='<h3>Calificaciones</h3><table><thead><tr><th>Trimestre</th><th>Promedio</th></tr></thead><tbody>';
+    [1,2,3].forEach(t=>{ const r=(recs[t]||{})[s.id]||{}; let sum=0,wsum=0; crit.forEach((c,i)=>{ if(r[i]!==undefined){ sum+=r[i]*c.weight; wsum+=c.weight; } });
+      html+=`<tr><td>T${t}</td><td>${wsum?(sum/wsum).toFixed(1):'—'}</td></tr>`; });
+    html+='</tbody></table>';
+    document.getElementById('fichaCalif').innerHTML=html;
+  }catch(e){ document.getElementById('fichaCalif').textContent=''; }
+  // Citatorios
+  try{
+    const d=await db.doc('citatorios/'+s.id).get(); const cits=(d.exists&&d.data().entries)||[];
+    const el=document.getElementById('fichaCit');
+    el.innerHTML = cits.length ? cits.map((c,i)=>`<div style="margin-bottom:6px"><strong>${c.fecha}</strong> — Folio ${c.folio} — ${(c.motivos||[]).join(', ')||'sin motivo especificado'} <button class="btn small secondary" data-ci="${i}">Ver</button></div>`).join('') : 'Sin citatorios generados.';
+    el.querySelectorAll('[data-ci]').forEach(b=>b.onclick=()=>{ const p=document.getElementById('citPreview'); p.style.display='block'; p.textContent=cits[b.dataset.ci].text; document.getElementById('btnPrintCit').style.display='inline-block'; document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active')); document.querySelector('[data-tab=docs]').classList.add('active'); ['grupos','alumnos','asistencia','calif','docs'].forEach(t=>document.getElementById('tab-'+t).style.display = t==='docs'?'block':'none'); p.scrollIntoView({behavior:'smooth'}); });
+  }catch(e){ document.getElementById('fichaCit').textContent=''; }
+  // Observaciones
+  let notes=[];
+  try{ const d=await db.doc('notes/'+s.id).get(); notes=(d.exists&&d.data().entries)||[]; }catch(e){}
+  renderObs(notes);
+  document.getElementById('obsGuardar').onclick=async()=>{
+    const txt=document.getElementById('obsNueva').value.trim(); if(!txt) return;
+    notes=[{date:new Date().toLocaleDateString('es-MX'),text:txt},...notes];
+    if(db){ await db.doc('notes/'+s.id).set({entries:notes}); }
+    document.getElementById('obsNueva').value=''; renderObs(notes);
+  };
+}
+function renderObs(notes){
+  const el=document.getElementById('fichaObs');
+  el.innerHTML = notes.length ? notes.map(n=>`<div style="margin-bottom:6px"><strong>${n.date}</strong> — ${n.text}</div>`).join('') : 'Sin observaciones aún.';
+}
+
+// Exportar CSV (para respaldar/abrir en Google Sheets o Excel)
+function csvEscape(v){ return '"'+String(v??'').replace(/"/g,'""')+'"'; }
+function saveCSV(filename,csv){
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+document.getElementById('btnExportGrades').onclick=async()=>{
+  const gid=document.getElementById('cGroup').value; const g=currentGroup(gid);
+  if(!g||!db) return alert('Selecciona un grupo.');
+  const d=await db.doc('grades/'+gid).get(); const recs=(d.exists&&d.data().records)||{};
+  const crit=g.criteria||DEFAULT_CRIT;
+  let csv='Alumno,T1,T2,T3,Promedio\n';
+  (g.students||[]).forEach(s=>{
+    const trimAvgs=[1,2,3].map(t=>{ const r=((recs[t]||{})[s.id])||{}; let sum=0,wsum=0;
+      crit.forEach((c,i)=>{ if(r[i]!==undefined){ sum+=r[i]*c.weight; wsum+=c.weight; } });
+      return wsum? sum/wsum : null; });
+    const valid=trimAvgs.filter(v=>v!==null);
+    const gen=valid.length? (valid.reduce((a,b)=>a+b,0)/valid.length).toFixed(1) : '';
+    csv+=[csvEscape(s.name),...trimAvgs.map(v=>v!==null?v.toFixed(1):''),gen].join(',')+'\n';
+  });
+  saveCSV(g.name+'_calificaciones.csv',csv);
+};
+document.getElementById('btnExportAttendance').onclick=async()=>{
+  const gid=document.getElementById('aGroup').value; const g=currentGroup(gid);
+  if(!g||!db) return alert('Selecciona un grupo.');
+  const snap=await db.collection('attendance').where('groupId','==',gid).get();
+  const recordsByStudent={}, datesSet=new Set();
+  snap.docs.forEach(doc=>{ const dta=doc.data(); if(!dta.date) return; datesSet.add(dta.date);
+    Object.entries(dta.records||{}).forEach(([sid,st])=>{ recordsByStudent[sid]=recordsByStudent[sid]||{}; recordsByStudent[sid][dta.date]=st; }); });
+  const dates=[...datesSet].sort();
+  let csv='Alumno,'+dates.map(csvEscape).join(',')+'\n';
+  (g.students||[]).forEach(s=>{
+    const row=dates.map(dt=>{ const st=(recordsByStudent[s.id]||{})[dt]; return st?labelStatus(st):''; });
+    csv+=[csvEscape(s.name),...row.map(csvEscape)].join(',')+'\n';
+  });
+  saveCSV(g.name+'_asistencia.csv',csv);
+};
+
+// Google Drive — respaldo/sincronización con la cuenta de cada quien
+// ⚠️ Reemplaza esto con tu propio Client ID de Google Cloud Console (ver instrucciones).
+const GOOGLE_CLIENT_ID='TU_CLIENT_ID_AQUI.apps.googleusercontent.com';
+const DRIVE_FILENAME='hub-docente-datos.json';
+let gTokenClient=null, gAccessToken=null;
+function initGoogle(){
+  if(!window.google||!google.accounts||GOOGLE_CLIENT_ID.startsWith('TU_CLIENT_ID')) return;
+  gTokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:GOOGLE_CLIENT_ID, scope:'https://www.googleapis.com/auth/drive.file',
+    callback:async(resp)=>{
+      if(resp.error){ document.getElementById('driveStatus').textContent='No se pudo conectar: '+resp.error; return; }
+      gAccessToken=resp.access_token;
+      document.getElementById('btnDriveConnect').style.display='none';
+      document.getElementById('btnDriveSave').style.display='inline-block';
+      document.getElementById('btnDriveLoad').style.display='inline-block';
+      document.getElementById('driveStatus').textContent='Conectado a Google Drive.';
+    }
+  });
+}
+document.getElementById('btnDriveConnect').onclick=()=>{
+  if(GOOGLE_CLIENT_ID.startsWith('TU_CLIENT_ID')){ alert('Falta configurar el Client ID de Google en el archivo antes de poder conectar Drive.'); return; }
+  if(!gTokenClient){ alert('Google todavía no termina de cargar, intenta de nuevo en un segundo.'); return; }
+  gTokenClient.requestAccessToken();
+};
+async function driveFindFile(){
+  const res=await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILENAME}' and trashed=false&spaces=drive&fields=files(id,modifiedTime)`,{headers:{Authorization:'Bearer '+gAccessToken}});
+  const json=await res.json(); return (json.files&&json.files[0])||null;
+}
+document.getElementById('btnDriveSave').onclick=async()=>{
+  const status=document.getElementById('driveStatus'); status.textContent='Guardando en Drive…';
+  try{
+    const existing=await driveFindFile();
+    const dataStr=localStorage.getItem(LSKEY)||'{}';
+    const boundary='-------hubdocente';
+    const metadata={name:DRIVE_FILENAME,mimeType:'application/json'};
+    const body=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${dataStr}\r\n--${boundary}--`;
+    const url=existing?`https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart`:`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+    await fetch(url,{method:existing?'PATCH':'POST',headers:{Authorization:'Bearer '+gAccessToken,'Content-Type':`multipart/related; boundary=${boundary}`},body});
+    status.textContent='Guardado en Drive · '+new Date().toLocaleTimeString('es-MX');
+  }catch(e){ status.textContent='No se pudo guardar en Drive.'; }
+};
+document.getElementById('btnDriveLoad').onclick=async()=>{
+  const status=document.getElementById('driveStatus'); status.textContent='Buscando datos en Drive…';
+  try{
+    const existing=await driveFindFile();
+    if(!existing){ status.textContent='No hay datos guardados en tu Drive todavía.'; return; }
+    const res=await fetch(`https://www.googleapis.com/drive/v3/files/${existing.id}?alt=media`,{headers:{Authorization:'Bearer '+gAccessToken}});
+    const remote=await res.text();
+    if(confirm('Se encontraron datos en tu Drive. Esto va a reemplazar los datos guardados en este navegador. ¿Continuar?')){
+      localStorage.setItem(LSKEY,remote); groups=[]; await loadGroups();
+      status.textContent='Datos cargados desde Drive · '+new Date().toLocaleTimeString('es-MX');
+    } else status.textContent='Carga cancelada.';
+  }catch(e){ status.textContent='No se pudo cargar desde Drive.'; }
+};
+window.addEventListener('load',()=>setTimeout(initGoogle,300));
+
+initDb();
+</script>
+</body>
+</html>
