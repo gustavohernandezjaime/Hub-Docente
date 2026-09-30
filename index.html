@@ -66,15 +66,51 @@ th{background:var(--bg)}
   <p style="font-size:.72rem;color:var(--sub);margin-top:2px">Tus datos se guardan solo en este navegador. Usa "Exportar CSV" en Asistencia/Calificaciones para respaldarlos.</p>
 </header>
 <nav class="no-print">
-  <button data-tab="grupos" class="active">Grupos</button>
+  <button data-tab="inicio" class="active">Inicio</button>
+  <button data-tab="grupos">Grupos</button>
   <button data-tab="alumnos">Alumnos</button>
   <button data-tab="asistencia">Asistencia</button>
+  <button data-tab="plano">Plan de clase</button>
+  <button data-tab="horario">Horario</button>
+  <button data-tab="diario">Diario</button>
+  <button data-tab="rubricas">Rúbricas</button>
   <button data-tab="calif">Calificaciones</button>
+  <button data-tab="examenes">Exámenes</button>
   <button data-tab="docs">Documentos</button>
 </nav>
 <main>
 
-<section id="tab-grupos">
+<section id="tab-inicio">
+  <div class="card">
+    <h2 id="inicioSaludo">Bienvenido</h2>
+    <p class="muted" id="inicioFecha"></p>
+    <div class="row3">
+      <div style="text-align:center;border:1px solid var(--line);border-radius:10px;padding:10px"><div style="font-size:1.4rem;font-weight:900" id="inGrupos">—</div><div class="muted">Grupos</div></div>
+      <div style="text-align:center;border:1px solid var(--line);border-radius:10px;padding:10px"><div style="font-size:1.4rem;font-weight:900" id="inAlumnos">—</div><div class="muted">Alumnos</div></div>
+      <div style="text-align:center;border:1px solid var(--line);border-radius:10px;padding:10px"><div style="font-size:1.4rem;font-weight:900" id="inAsistHoy">—</div><div class="muted">Asistencia registrada hoy</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Tu horario de hoy</h2>
+    <div id="inHorario" class="muted">Cargando…</div>
+  </div>
+  <div class="card">
+    <h2>Agenda de hoy</h2>
+    <h3>Pendiente de pasar lista</h3>
+    <div id="inPendientes" class="muted">Cargando…</div>
+    <h3>Citatorios de hoy</h3>
+    <div id="inCitatorios" class="muted">Cargando…</div>
+    <h3>Diario de hoy</h3>
+    <div id="inDiario" class="muted">Cargando…</div>
+  </div>
+  <div class="card">
+    <h2>Tus pendientes de hoy</h2>
+    <div class="row"><input id="inTareaTexto" placeholder="Escribe un pendiente…"><button class="btn small" id="btnAddTarea">Agregar</button></div>
+    <div id="inTareas" class="muted" style="margin-top:8px">Cargando…</div>
+  </div>
+</section>
+
+<section id="tab-grupos" style="display:none">
   <div class="card">
     <h2>Respaldo en Google Drive</h2>
     <p class="muted">Guarda tus datos en tu propia cuenta de Google Drive para no perderlos y pasarlos entre tus dispositivos. Cada persona que use este Hub conecta su propia cuenta; nadie ve los datos de nadie.</p>
@@ -93,6 +129,7 @@ th{background:var(--bg)}
       <div><label>Asignatura</label><input id="gMateria" list="materiaList" placeholder="Ej. Artes"><datalist id="materiaList"></datalist></div>
     </div>
     <label>Alumnos (uno por línea — solo si das de alta un único grupo)</label><textarea id="gStudents" placeholder="Nombre del alumno 1&#10;Nombre del alumno 2"></textarea>
+    <label>o importa desde Excel/CSV (columna A = nombres)</label><input type="file" id="gImportFile" accept=".csv,.xlsx,.xls">
     <p class="muted">Si un docente imparte la misma materia a varios grupos (ej. Artes a 3°A–3°F), escribe todas las letras separadas por coma para crearlos de una vez; después añade la lista de alumnos de cada uno por separado.</p>
     <button class="btn" id="btnAddGroup">Crear grupo(s)</button>
   </div>
@@ -133,6 +170,102 @@ th{background:var(--bg)}
   </div>
 </section>
 
+<section id="tab-plano" style="display:none">
+  <div class="card">
+    <h2>Plan de clase</h2>
+    <div class="row3">
+      <div><label>Grupo</label><select id="pmGroup"></select></div>
+      <div><label>Fecha (pase de lista)</label><input type="date" id="pmDate"></div>
+      <div><label>&nbsp;</label><button class="btn secondary" id="btnRandomStudent" style="width:100%">🎲 Alumno aleatorio</button></div>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <label style="margin:0">Filas <input type="number" id="pmRows" value="5" min="1" max="12" style="width:55px;display:inline-block"></label>
+      <label style="margin:0">Columnas <input type="number" id="pmCols" value="6" min="1" max="12" style="width:55px;display:inline-block"></label>
+      <button class="btn small secondary" id="btnApplyGrid">Aplicar tamaño</button>
+      <button class="btn small secondary" id="btnEditSeats">✏️ Acomodar alumnos</button>
+    </div>
+    <div id="seatPalette" class="row" style="margin-top:8px"></div>
+    <div id="seatGrid" style="margin-top:10px"></div>
+    <p class="muted">Modo normal: clic en un pupitre ocupado cambia su asistencia (Presente → Ausente → Retardo → Justificada → sin registro). Modo "Acomodar": elige un alumno de la lista y luego da clic en un pupitre vacío para sentarlo ahí; clic en uno ocupado lo libera.</p>
+  </div>
+</section>
+
+<section id="tab-horario" style="display:none">
+  <div class="card">
+    <h2>Periodos del día</h2>
+    <p class="muted">Define tus horas de clase (una vez). Luego asigna grupos en la cuadrícula de abajo.</p>
+    <div id="periodsEditor"></div>
+    <button class="btn small secondary" id="btnAddPeriod">+ Agregar periodo</button>
+    <button class="btn small" id="btnSavePeriods">Guardar periodos</button>
+  </div>
+  <div class="card">
+    <h2>Horario semanal</h2>
+    <div id="horarioGrid" style="overflow-x:auto"></div>
+    <p class="muted">Elige el grupo que te toca en cada celda. Se guarda solo, al cambiar.</p>
+  </div>
+</section>
+
+<section id="tab-diario" style="display:none">
+  <div class="card">
+    <h2>Diario de clase</h2>
+    <label>Grupo</label><select id="dGroup"></select>
+    <div class="row3">
+      <div><label>Tipo</label><select id="dTipo"><option value="incidente">Incidente de conducta</option><option value="minuta">Minuta con padres</option><option value="recordatorio">Recordatorio</option><option value="otro">Otro</option></select></div>
+      <div><label>Alumno (opcional)</label><select id="dStudent"><option value="">— Grupo en general —</option></select></div>
+    </div>
+    <label>Nota</label><textarea id="dTexto" placeholder="Describe lo ocurrido…"></textarea>
+    <button class="btn small" id="btnAddDiario">Agregar al diario</button>
+    <h3>Historial</h3>
+    <div id="diarioList" class="muted">Selecciona un grupo.</div>
+  </div>
+</section>
+
+<section id="tab-rubricas" style="display:none">
+  <div class="card">
+    <h2>Mis rúbricas</h2>
+    <div id="rubList" class="muted">Cargando…</div>
+    <button class="btn small" id="btnNewRub">+ Nueva rúbrica</button>
+  </div>
+  <div class="card" id="rubEditorCard" style="display:none">
+    <h2>Editor de rúbrica</h2>
+    <label>Nombre</label><input id="rbName" placeholder="Ej. Presentación oral">
+    <button class="btn small secondary" id="btnRubTemplate" type="button">Usar plantilla estándar como propuesta</button>
+    <h3>Niveles (nombre y puntos)</h3>
+    <div id="rbLevels"></div>
+    <button class="btn small secondary" id="btnAddLevel">+ Nivel</button>
+    <h3>Criterios y descriptores por nivel</h3>
+    <div id="rbCriteria" style="overflow-x:auto"></div>
+    <button class="btn small secondary" id="btnAddRubCrit">+ Criterio</button>
+    <h3>Peso de cada tipo de evaluación (%)</h3>
+    <div class="row3">
+      <div><label>Docente</label><input type="number" id="rbWDoc" value="70"></div>
+      <div><label>Autoevaluación</label><input type="number" id="rbWAuto" value="15"></div>
+      <div><label>Coevaluación</label><input type="number" id="rbWCo" value="15"></div>
+    </div>
+    <p class="muted">Si ya evaluaste con esta rúbrica, evita agregar o quitar niveles y criterios: las evaluaciones guardadas se ligan a su posición. Editar textos sí es seguro.</p>
+    <div class="row"><button class="btn" id="btnSaveRub">Guardar rúbrica</button><button class="btn secondary" id="btnCancelRub">Cerrar</button></div>
+  </div>
+  <div class="card">
+    <h2>Evaluar con rúbrica</h2>
+    <div class="row3">
+      <div><label>Grupo</label><select id="evGroup"></select></div>
+      <div><label>Rúbrica</label><select id="evRub"></select></div>
+      <div><label>Trimestre</label><select id="evTrim"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+    </div>
+    <div class="row3">
+      <div><label>Tipo</label><select id="evTipo"><option value="docente">Docente</option><option value="auto">Autoevaluación</option><option value="co">Coevaluación</option></select></div>
+      <div><label>Alumno evaluado</label><select id="evStudent"></select></div>
+      <div id="evEvalWrap" style="display:none"><label>Evaluador (compañero)</label><select id="evEvaluator"></select></div>
+    </div>
+    <p class="muted">Para autoevaluación y coevaluación, entrega el dispositivo al alumno: elige su nombre, deja que marque su nivel en cada criterio y guarda.</p>
+    <div id="evMatrix" style="margin-top:10px"></div>
+    <button class="btn" id="btnSaveEval" style="display:none">Guardar y pasar al siguiente</button>
+    <div id="evStatus" class="muted"></div>
+    <h3>Resumen del grupo</h3>
+    <div id="evSummary" class="muted">Selecciona grupo y rúbrica.</div>
+  </div>
+</section>
+
 <section id="tab-calif" style="display:none">
   <div class="card">
     <h2>Calificaciones — evaluación trimestral (NEM)</h2>
@@ -141,17 +274,82 @@ th{background:var(--bg)}
       <div><label>Trimestre</label><select id="cTrim"><option value="1">Trimestre 1</option><option value="2">Trimestre 2</option><option value="3">Trimestre 3</option></select></div>
     </div>
     <div id="cQuickSwitch" class="row" style="margin-top:4px"></div>
-    <h3>Criterios de evaluación del grupo</h3>
+    <h3>Columnas de evaluación del grupo</h3>
+    <p class="muted">Cada columna puede ser una nota manual, o una fórmula calculada a partir de otras columnas (por nombre).</p>
     <div id="critEditor"></div>
-    <button class="btn small secondary" id="btnAddCrit">+ Agregar criterio</button>
-    <button class="btn small" id="btnSaveCrit">Guardar criterios</button>
+    <button class="btn small secondary" id="btnAddCrit">+ Agregar columna</button>
     <div id="critWarn" class="muted"></div>
+    <h3>Reglas de color</h3>
+    <div id="colorRulesEditor"></div>
+    <button class="btn small secondary" id="btnAddColorRule">+ Agregar regla</button>
+    <button class="btn small" id="btnSaveCrit">Guardar columnas y reglas</button>
     <h3>Calificaciones del trimestre</h3>
     <div id="califWrap"></div>
     <button class="btn" id="btnSaveGrades">Guardar calificaciones</button>
     <h3>Resumen anual</h3>
     <div id="resumenWrap" class="muted">Selecciona un grupo.</div>
     <button class="btn secondary" id="btnExportGrades">Exportar calificaciones (CSV)</button>
+    <button class="btn secondary" id="btnBoletasGrupo">📄 Generar boletas del grupo (PDF)</button>
+  </div>
+</section>
+
+<section id="tab-examenes" style="display:none">
+  <div class="card">
+    <h2>Banco de reactivos</h2>
+    <div class="row3">
+      <div><label>Materia</label><select id="rxMateria">
+        <option>Español</option><option>Matemáticas</option><option>Biología</option><option>Física</option><option>Química</option>
+        <option>Historia</option><option>Geografía</option><option>Formación Cívica y Ética</option><option>Inglés</option>
+        <option>Artes</option><option>Talleres</option><option>Tecnología</option><option>Integración Curricular</option>
+      </select></div>
+      <div><label>Grado</label><select id="rxGrado"><option>1°</option><option>2°</option><option>3°</option></select></div>
+      <div><label>Trimestre</label><select id="rxTrim"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+    </div>
+    <div class="row3">
+      <div><label>Tema</label><input id="rxTema" placeholder="Ej. Fracciones"></div>
+      <div><label>Tipo</label><select id="rxTipo"><option value="opcion">Opción múltiple</option><option value="vf">Verdadero/Falso</option></select></div>
+    </div>
+    <label>Pregunta</label><textarea id="rxPregunta"></textarea>
+    <div id="rxOpcionesWrap">
+      <label>Opciones (marca la correcta)</label>
+      <div class="row" style="margin-bottom:4px"><input type="radio" name="rxCorrecta" value="0" checked><input type="text" class="rxOpt" placeholder="Opción A"></div>
+      <div class="row" style="margin-bottom:4px"><input type="radio" name="rxCorrecta" value="1"><input type="text" class="rxOpt" placeholder="Opción B"></div>
+      <div class="row" style="margin-bottom:4px"><input type="radio" name="rxCorrecta" value="2"><input type="text" class="rxOpt" placeholder="Opción C"></div>
+      <div class="row" style="margin-bottom:4px"><input type="radio" name="rxCorrecta" value="3"><input type="text" class="rxOpt" placeholder="Opción D"></div>
+    </div>
+    <div id="rxVFWrap" style="display:none">
+      <label>Respuesta correcta</label>
+      <label class="chkrow"><input type="radio" name="rxVF" value="0" checked><span>Verdadero</span></label>
+      <label class="chkrow"><input type="radio" name="rxVF" value="1"><span>Falso</span></label>
+    </div>
+    <button class="btn small" id="btnAddReactivo">+ Agregar al banco</button>
+    <h3>Reactivos guardados</h3>
+    <div class="row3">
+      <div><label>Filtrar por materia</label><select id="rxFMateria"><option value="">Todas</option>
+        <option>Español</option><option>Matemáticas</option><option>Biología</option><option>Física</option><option>Química</option>
+        <option>Historia</option><option>Geografía</option><option>Formación Cívica y Ética</option><option>Inglés</option>
+        <option>Artes</option><option>Talleres</option><option>Tecnología</option><option>Integración Curricular</option></select></div>
+      <div><label>Grado</label><select id="rxFGrado"><option value="">Todos</option><option>1°</option><option>2°</option><option>3°</option></select></div>
+      <div><label>Trimestre</label><select id="rxFTrim"><option value="">Todos</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+    </div>
+    <div id="rxList" class="muted">Sin reactivos aún.</div>
+  </div>
+  <div class="card">
+    <h2>Generar examen</h2>
+    <p class="muted">Usa los mismos filtros de arriba para acotar el banco.</p>
+    <div class="row3">
+      <div><label>Modo</label><select id="exModo"><option value="aleatorio">Aleatorio</option><option value="manual">Elegir a mano</option></select></div>
+      <div id="exNWrap"><label># de reactivos</label><input type="number" id="exN" value="10" min="1"></div>
+      <div><label>Título del examen</label><input id="exTitulo" placeholder="Ej. Examen Trimestre 1"></div>
+    </div>
+    <div id="exManualList" class="muted" style="display:none"></div>
+    <button class="btn" id="btnGenExamen">Generar</button>
+    <div id="examenPreview" class="doc-preview" style="display:none"></div>
+    <div id="respuestasPreview" class="doc-preview" style="display:none"></div>
+    <div class="row no-print">
+      <button class="btn secondary no-print" id="btnPrintExamen" style="display:none">Imprimir examen</button>
+      <button class="btn secondary no-print" id="btnPrintRespuestas" style="display:none">Imprimir hoja de respuestas</button>
+    </div>
   </div>
 </section>
 
@@ -210,11 +408,31 @@ th{background:var(--bg)}
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.4/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const uid=()=>crypto.randomUUID();
-const DEFAULT_CRIT=[{name:'Participación',weight:20},{name:'Tareas/Actividades',weight:20},{name:'Proyecto',weight:30},{name:'Examen',weight:30}];
+const DEFAULT_CRIT=[{name:'Participación',type:'nota',weight:20},{name:'Tareas/Actividades',type:'nota',weight:20},{name:'Proyecto',type:'nota',weight:30},{name:'Examen',type:'nota',weight:30}];
+const DEFAULT_COLOR_RULES=[{op:'<',value:6,color:'#e11d48'},{op:'>=',value:9,color:'#16a34a'}];
+async function handleImportFile(file,targetTextareaId){
+  const fname=file.name.toLowerCase(); let names=[];
+  try{
+    if(fname.endsWith('.csv')){
+      const text=await file.text();
+      names=text.split(/\r?\n/).map(line=>line.split(/[,;\t]/)[0].replace(/^"|"$/g,'').trim()).filter(Boolean);
+    } else {
+      const buf=await file.arrayBuffer(); const wb=XLSX.read(buf,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(ws,{header:1});
+      names=rows.map(r=>String((r&&r[0])||'').trim()).filter(Boolean);
+    }
+  }catch(e){ alert('No se pudo leer el archivo: '+e.message); return; }
+  const headerWords=['nombre','alumno','estudiante','name','apellido'];
+  if(names.length && headerWords.some(w=>names[0].toLowerCase().includes(w))) names.shift();
+  document.getElementById(targetTextareaId).value=names.join('\n');
+}
+document.getElementById('gImportFile').onchange=(e)=>{ if(e.target.files[0]) handleImportFile(e.target.files[0],'gStudents'); };
 
 // Almacenamiento local (en este navegador) — sin necesidad de cuenta de Claude
 const LSKEY='hubDocenteData';
@@ -242,6 +460,7 @@ function makeDb(){
 let db=makeDb(), groups=[];
 
 async function initDb(){
+  await loadRubrics();
   await loadGroups();
 }
 async function loadGroups(){
@@ -282,9 +501,11 @@ function openRosterEditor(g){
   const wrap=document.getElementById('groupList');
   const box=document.createElement('div'); box.className='card'; box.style.marginTop='8px';
   box.innerHTML=`<h3 style="margin-top:0">Alumnos de ${g.name} — ${g.materia||''}</h3>
+    <label>Importar/reemplazar desde Excel/CSV (columna A = nombres)</label><input type="file" id="rosterImportFile" accept=".csv,.xlsx,.xls">
     <textarea id="rosterEdit">${(g.students||[]).map(s=>s.name).join('\n')}</textarea>
     <div class="row"><button class="btn small" id="rosterSave">Guardar lista</button><button class="btn small secondary" id="rosterCancel">Cancelar</button></div>`;
   wrap.parentNode.insertBefore(box, wrap.nextSibling);
+  document.getElementById('rosterImportFile').onchange=(e)=>{ if(e.target.files[0]) handleImportFile(e.target.files[0],'rosterEdit'); };
   document.getElementById('rosterCancel').onclick=()=>box.remove();
   document.getElementById('rosterSave').onclick=async()=>{
     const lines=document.getElementById('rosterEdit').value.split('\n').map(s=>s.trim()).filter(Boolean);
@@ -315,13 +536,15 @@ function openQRCredenciales(g){
   });
 }
 function fillGroupSelects(){
-  ['aGroup','cGroup','citGroup'].forEach(id=>{
+  ['aGroup','cGroup','citGroup','pmGroup','dGroup','evGroup'].forEach(id=>{
     const sel=document.getElementById(id); const cur=sel.value;
     sel.innerHTML=groups.map(g=>`<option value="${g.id}">${g.name} · ${g.materia||''}</option>`).join('');
     if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
   });
-  renderAttendanceTable(); renderCritEditor(); renderGradesTable(); renderResumen(); fillStudentSelect();
+  renderAttendanceTable(); renderCritEditor(); renderColorRulesEditor(); renderGradesTable(); renderResumen(); fillStudentSelect();
   renderQuickSwitch('aGroup','aQuickSwitch'); renderQuickSwitch('cGroup','cQuickSwitch');
+  loadSeatMap(); document.getElementById('dGroup').onchange(); renderEvSetup();
+  renderHorarioGrid(); renderInicio();
 }
 function renderQuickSwitch(selectId,wrapId){
   const sel=document.getElementById(selectId); const g=currentGroup(sel.value); const wrap=document.getElementById(wrapId);
@@ -354,7 +577,8 @@ document.getElementById('btnAddGroup').onclick=async()=>{
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
-  ['grupos','alumnos','asistencia','calif','docs'].forEach(t=>document.getElementById('tab-'+t).style.display = t===b.dataset.tab?'block':'none');
+  ['inicio','grupos','alumnos','asistencia','plano','horario','diario','rubricas','calif','examenes','docs'].forEach(t=>document.getElementById('tab-'+t).style.display = t===b.dataset.tab?'block':'none');
+  if(b.dataset.tab==='calif') renderGradesTable();
 });
 
 // Attendance
@@ -408,10 +632,12 @@ document.getElementById('btnVoice').onclick=()=>{
   status.innerHTML='<span class="pulse">Escuchando…</span> nombre + "presente", "ausente", "retardo" o "justificada".';
   recog.onresult=(e)=>{
     const text=normalize(e.results[e.results.length-1][0].transcript);
-    let sw='present';
+    let sw=null;
     if(text.includes('ausente')) sw='absent';
     else if(text.includes('retardo')||text.includes('tarde')) sw='late';
     else if(text.includes('justific')) sw='justified';
+    else if(text.includes('presente')) sw='present';
+    if(!sw) return;
     let best=null,bestScore=0;
     (g.students||[]).forEach(s=>{ const n=normalize(s.name); const parts=n.split(' ');
       let score=text.includes(n)?n.length:parts.filter(p=>p.length>2&&text.includes(p)).join('').length;
@@ -474,41 +700,137 @@ document.getElementById('btnStopQR').onclick=()=>{
 };
 
 // Criteria editor
+// Motor de columnas: 'nota' (manual) o 'formula' (calculada a partir de otras, por nombre)
+function safeEval(expr){
+  let i=0;
+  function factor(){ if(expr[i]==='('){ i++; const v=addsub(); i++; return v; } if(expr[i]==='-'){ i++; return -factor(); }
+    let start=i; while(i<expr.length&&/[0-9.]/.test(expr[i])) i++; return parseFloat(expr.slice(start,i)||'0'); }
+  function term(){ let v=factor(); while(expr[i]==='*'||expr[i]==='/'){ const op=expr[i++]; const r=factor(); v=op==='*'?v*r:(r===0?0:v/r); } return v; }
+  function addsub(){ let v=term(); while(expr[i]==='+'||expr[i]==='-'){ const op=expr[i++]; const r=term(); v=op==='+'?v+r:v-r; } return v; }
+  return addsub();
+}
+function getByName(byName,name){ const v=byName[(name||'').trim()]; return (v===undefined||v===null||isNaN(v))?0:v; }
+function evalFormulaCol(c,byName){
+  const srcs=(c.srcNames||[]).map(n=>getByName(byName,n));
+  try{
+    if(c.calc==='media') return srcs.length?srcs.reduce((a,b)=>a+b,0)/srcs.length:undefined;
+    if(c.calc==='suma') return srcs.reduce((a,b)=>a+b,0);
+    if(c.calc==='min') return srcs.length?Math.min(...srcs):undefined;
+    if(c.calc==='max') return srcs.length?Math.max(...srcs):undefined;
+    if(c.calc==='porcentaje') return c.max?(getByName(byName,c.base)/c.max)*100:undefined;
+    if(c.calc==='personalizada'){ let e=(c.expr||'').replace(/\{([^}]+)\}/g,(m,n)=>String(getByName(byName,n))); return safeEval(e.replace(/\s+/g,'')); }
+  }catch(err){ return undefined; }
+  return undefined;
+}
+function computeRowValues(rawRec,columns){
+  const byName={}, byIndex={};
+  columns.forEach((c,i)=>{
+    let v;
+    if(c.type==='formula') v=evalFormulaCol(c,byName);
+    else v=(rawRec&&rawRec[i]!==undefined&&rawRec[i]!=='')?Number(rawRec[i]):undefined;
+    byIndex[i]=v; if(v!==undefined&&!isNaN(v)) byName[c.name]=v;
+  });
+  return byIndex;
+}
+function weightedAvg(byIndex,columns){
+  let sum=0,wsum=0;
+  columns.forEach((c,i)=>{ const v=byIndex[i], w=c.weight||0; if(v!==undefined&&!isNaN(v)&&w>0){ sum+=v*w; wsum+=w; } });
+  return wsum? sum/wsum : null;
+}
+function matchColor(val,rules){
+  if(val===undefined||val===null||isNaN(val)) return null;
+  for(const r of (rules||[])){ const v=parseFloat(r.value); let hit=false;
+    if(r.op==='<') hit=val<v; else if(r.op==='<=') hit=val<=v; else if(r.op==='>') hit=val>v; else if(r.op==='>=') hit=val>=v; else if(r.op==='==') hit=val===v;
+    if(hit) return r.color; }
+  return null;
+}
+function applyColor(el,val,rules){ const c=matchColor(val,rules); if(c){ el.style.background=c; el.style.color='#fff'; } else { el.style.background=''; el.style.color=''; } }
+
 function renderCritEditor(){
   const gid=document.getElementById('cGroup').value; const g=currentGroup(gid);
   const wrap=document.getElementById('critEditor'); wrap.innerHTML='';
   if(!g) return;
   (g.criteria||DEFAULT_CRIT).forEach((c,i)=>{
-    const row=document.createElement('div'); row.className='critRow';
-    row.innerHTML=`<input type="text" value="${c.name}" data-i="${i}" class="critName" placeholder="Nombre del criterio">
-      <input type="number" value="${c.weight}" data-i="${i}" class="critWeight" min="0" max="100">%
-      <button class="btn small secondary" data-del="${i}">✕</button>`;
+    const row=document.createElement('div'); row.className='critRow'; row.style.cssText='display:block;border:1px solid var(--line);border-radius:8px;padding:8px;margin:6px 0';
+    const isF=c.type==='formula';
+    row.innerHTML=`<div class="row3">
+        <input type="text" value="${c.name}" data-i="${i}" class="critName" placeholder="Nombre">
+        <select data-i="${i}" class="critType"><option value="nota" ${(!isF&&c.type!=='rubrica')?'selected':''}>Nota manual</option><option value="formula" ${isF?'selected':''}>Fórmula</option><option value="rubrica" ${c.type==='rubrica'?'selected':''}>Rúbrica</option></select>
+        <input type="number" value="${c.weight||0}" data-i="${i}" class="critWeight" min="0" max="100" placeholder="Peso %">
+      </div>
+      ${isF?`<div class="row3" style="margin-top:4px">
+        <select data-i="${i}" class="critCalc">
+          <option value="media" ${c.calc==='media'?'selected':''}>Media</option><option value="suma" ${c.calc==='suma'?'selected':''}>Suma</option>
+          <option value="min" ${c.calc==='min'?'selected':''}>Mínimo</option><option value="max" ${c.calc==='max'?'selected':''}>Máximo</option>
+          <option value="porcentaje" ${c.calc==='porcentaje'?'selected':''}>Porcentaje</option><option value="personalizada" ${c.calc==='personalizada'?'selected':''}>Personalizada</option>
+        </select>
+        ${c.calc==='personalizada'?`<input type="text" data-i="${i}" class="critExpr" value="${c.expr||''}" placeholder='Ej. {Tarea 1}+{Examen}*0.5'>`
+          :c.calc==='porcentaje'?`<input type="text" data-i="${i}" class="critBase" value="${c.base||''}" placeholder="Columna base"><input type="number" data-i="${i}" class="critMax" value="${c.max||10}" placeholder="Máximo">`
+          :`<input type="text" data-i="${i}" class="critSrc" value="${(c.srcNames||[]).join(', ')}" placeholder="Columnas de origen, separadas por coma">`}
+      </div>`:''}
+      ${c.type==='rubrica'?`<div style="margin-top:4px"><select data-i="${i}" class="critRubric"><option value="">— elegir rúbrica —</option>${rubrics.map(r=>`<option value="${r.id}" ${c.rubricId===r.id?'selected':''}>${esc(r.name)}</option>`).join('')}</select></div>`:''}
+      <button class="btn small secondary" data-del="${i}" style="margin-top:4px">✕ Eliminar columna</button>`;
     wrap.appendChild(row);
   });
   wrap.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ const crit=readCritEditor(); crit.splice(parseInt(b.dataset.del),1); paintCrit(crit); });
+  wrap.querySelectorAll('.critType,.critCalc').forEach(sel=>sel.onchange=()=>paintCrit(readCritEditor()));
+  wrap.querySelectorAll('.critName,.critWeight,.critExpr,.critBase,.critMax,.critSrc').forEach(inp=>inp.onchange=updateCritWarn);
   updateCritWarn();
-  wrap.querySelectorAll('input').forEach(inp=>inp.oninput=updateCritWarn);
 }
 function paintCrit(crit){ const g=currentGroup(document.getElementById('cGroup').value); if(g){ g.criteria=crit; renderCritEditor(); } }
 function readCritEditor(){
-  const names=[...document.querySelectorAll('.critName')], weights=[...document.querySelectorAll('.critWeight')];
-  return names.map((n,i)=>({name:n.value||('Criterio '+(i+1)), weight:parseFloat(weights[i].value)||0}));
+  const rows=[...document.querySelectorAll('#critEditor .critRow')];
+  return rows.map((row,i)=>{
+    const name=row.querySelector('.critName').value||('Columna '+(i+1));
+    const type=row.querySelector('.critType').value;
+    const weight=parseFloat(row.querySelector('.critWeight').value)||0;
+    const c={name,type,weight};
+    if(type==='rubrica') c.rubricId=row.querySelector('.critRubric')?.value||'';
+    if(type==='formula'){
+      c.calc=row.querySelector('.critCalc').value;
+      if(c.calc==='personalizada') c.expr=row.querySelector('.critExpr')?.value||'';
+      else if(c.calc==='porcentaje'){ c.base=row.querySelector('.critBase')?.value||''; c.max=parseFloat(row.querySelector('.critMax')?.value)||10; }
+      else c.srcNames=(row.querySelector('.critSrc')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    }
+    return c;
+  });
 }
 function updateCritWarn(){
-  const crit=readCritEditor(); const sum=crit.reduce((a,c)=>a+c.weight,0);
+  const crit=readCritEditor(); const sum=crit.reduce((a,c)=>a+(c.weight||0),0);
   document.getElementById('critWarn').textContent = sum===100? '✓ Suma de ponderaciones: 100%' : `Suma actual: ${sum}% (recomendado: 100%)`;
 }
-document.getElementById('btnAddCrit').onclick=()=>{ const crit=readCritEditor(); crit.push({name:'',weight:0}); paintCrit(crit); };
+document.getElementById('btnAddCrit').onclick=()=>{ const crit=readCritEditor(); crit.push({name:'',type:'nota',weight:0}); paintCrit(crit); };
+
+function renderColorRulesEditor(){
+  const gid=document.getElementById('cGroup').value; const g=currentGroup(gid);
+  const wrap=document.getElementById('colorRulesEditor'); wrap.innerHTML='';
+  if(!g) return;
+  (g.colorRules||DEFAULT_COLOR_RULES).forEach((r,i)=>{
+    const row=document.createElement('div'); row.className='row colorRuleRow'; row.style.marginBottom='4px';
+    row.innerHTML=`<span class="muted">Si valor</span>
+      <select data-i="${i}" class="crOp"><option value="<" ${r.op==='<'?'selected':''}>&lt;</option><option value="<=" ${r.op==='<='?'selected':''}>&le;</option><option value=">" ${r.op==='>'?'selected':''}>&gt;</option><option value=">=" ${r.op==='>='?'selected':''}>&ge;</option><option value="==" ${r.op==='=='?'selected':''}>=</option></select>
+      <input type="number" data-i="${i}" class="crVal" value="${r.value}" style="width:70px">
+      <input type="color" data-i="${i}" class="crColor" value="${r.color}" style="width:44px;padding:2px">
+      <button class="btn small secondary" data-delcr="${i}">✕</button>`;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-delcr]').forEach(b=>b.onclick=()=>{ const rules=readColorRulesEditor(); rules.splice(parseInt(b.dataset.delcr),1); const g2=currentGroup(gid); if(g2){ g2.colorRules=rules; renderColorRulesEditor(); } });
+}
+function readColorRulesEditor(){
+  const rows=[...document.querySelectorAll('#colorRulesEditor .colorRuleRow')];
+  return rows.map(row=>({op:row.querySelector('.crOp').value, value:parseFloat(row.querySelector('.crVal').value)||0, color:row.querySelector('.crColor').value}));
+}
+document.getElementById('btnAddColorRule').onclick=()=>{ const g=currentGroup(document.getElementById('cGroup').value); if(!g) return; const rules=readColorRulesEditor(); rules.push({op:'<',value:6,color:'#e11d48'}); g.colorRules=rules; renderColorRulesEditor(); };
 document.getElementById('btnSaveCrit').onclick=async()=>{
   const gid=document.getElementById('cGroup').value; if(!gid||!db) return;
-  const crit=readCritEditor();
-  await db.doc('groups/'+gid).update({criteria:crit});
-  const g=currentGroup(gid); if(g) g.criteria=crit;
-  renderGradesTable(); alert('Criterios guardados.');
+  const crit=readCritEditor(); const rules=readColorRulesEditor();
+  await db.doc('groups/'+gid).update({criteria:crit,colorRules:rules});
+  const g=currentGroup(gid); if(g){ g.criteria=crit; g.colorRules=rules; }
+  renderGradesTable(); alert('Columnas y reglas guardadas.');
 };
 
 // Grades
-document.getElementById('cGroup').onchange=()=>{ renderQuickSwitch('cGroup','cQuickSwitch'); renderCritEditor(); renderGradesTable(); renderResumen(); };
+document.getElementById('cGroup').onchange=()=>{ renderQuickSwitch('cGroup','cQuickSwitch'); renderCritEditor(); renderColorRulesEditor(); renderGradesTable(); renderResumen(); };
 document.getElementById('cTrim').onchange=renderGradesTable;
 let gradesDoc={};
 async function renderGradesTable(){
@@ -516,31 +838,51 @@ async function renderGradesTable(){
   const wrap=document.getElementById('califWrap'); wrap.innerHTML='';
   if(!g) return;
   if(db){ try{ const d=await db.doc('grades/'+gid).get(); gradesDoc=(d.exists&&d.data().records)||{}; }catch(e){ gradesDoc={}; } }
-  const crit=g.criteria||DEFAULT_CRIT;
+  const crit=g.criteria||DEFAULT_CRIT; const rules=g.colorRules||DEFAULT_COLOR_RULES;
+  rubricCache={};
+  for(const c of crit){ if(c.type==='rubrica'&&c.rubricId&&!rubricCache[c.rubricId]) rubricCache[c.rubricId]=await rubricScoresFor(gid,c.rubricId,trim); }
   const table=document.createElement('table');
-  table.innerHTML='<thead><tr><th>Alumno</th>'+crit.map(c=>`<th>${c.name} (${c.weight}%)</th>`).join('')+'<th>Trim.</th></tr></thead>';
+  table.innerHTML='<thead><tr><th>Alumno</th>'+crit.map(c=>`<th>${c.name}${c.weight?` (${c.weight}%)`:''}${c.type==='formula'?' Ⓕ':c.type==='rubrica'?' ✎':''}</th>`).join('')+'<th>Trim.</th></tr></thead>';
   const tbody=document.createElement('tbody');
   (g.students||[]).forEach(s=>{
     const rec=((gradesDoc[trim]||{})[s.id])||{};
     let tds=`<td>${s.name}</td>`;
-    crit.forEach((c,i)=>{ tds+=`<td><input type="number" min="0" max="10" step="0.1" style="width:55px" data-s="${s.id}" data-c="${i}" value="${rec[i]??''}"></td>`; });
-    tds+=`<td class="muted" id="avg-${s.id}">—</td>`;
+    crit.forEach((c,i)=>{
+      if(c.type==='formula'||c.type==='rubrica') tds+=`<td id="f-${s.id}-${i}" class="muted">—</td>`;
+      else tds+=`<td><input type="number" min="0" max="10" step="0.1" style="width:55px" data-s="${s.id}" data-c="${i}" value="${rec[i]??''}"></td>`;
+    });
+    tds+=`<td id="avg-${s.id}"><strong>—</strong></td>`;
     const tr=document.createElement('tr'); tr.innerHTML=tds; tbody.appendChild(tr);
-    tr.querySelectorAll('input').forEach(inp=>inp.oninput=()=>updateRowAvg(s.id,crit));
-    updateRowAvg(s.id,crit);
+    tr.querySelectorAll('input').forEach(inp=>inp.oninput=()=>updateRow(s.id,crit,rules));
+    updateRow(s.id,crit,rules);
   });
   table.appendChild(tbody); wrap.appendChild(table);
 }
-function updateRowAvg(sid,crit){
-  let sum=0,wsum=0;
-  crit.forEach((c,i)=>{ const inp=document.querySelector(`input[data-s="${sid}"][data-c="${i}"]`); if(inp&&inp.value!==''){ sum+=parseFloat(inp.value)*c.weight; wsum+=c.weight; } });
-  const el=document.getElementById('avg-'+sid); if(el) el.textContent = wsum? (sum/wsum).toFixed(1) : '—';
+function updateRow(sid,crit,rules){
+  const raw={};
+  crit.forEach((c,i)=>{ if(c.type==='rubrica'){ const rv=(rubricCache[c.rubricId]||{})[sid]; if(rv!==undefined&&rv!==null) raw[i]=rv; } else if(c.type!=='formula'){ const inp=document.querySelector(`input[data-s="${sid}"][data-c="${i}"]`); if(inp&&inp.value!=='') raw[i]=parseFloat(inp.value); } });
+  const byIndex=computeRowValues(raw,crit);
+  crit.forEach((c,i)=>{
+    if(c.type==='formula'||c.type==='rubrica'){
+      const cell=document.getElementById(`f-${sid}-${i}`); const v=byIndex[i];
+      if(cell){ cell.textContent=(v!==undefined&&!isNaN(v))?v.toFixed(1):'—'; applyColor(cell,v,rules); }
+    } else {
+      const inp=document.querySelector(`input[data-s="${sid}"][data-c="${i}"]`); if(inp) applyColor(inp,byIndex[i],rules);
+    }
+  });
+  const avg=weightedAvg(byIndex,crit);
+  const el=document.getElementById('avg-'+sid); if(el){ el.innerHTML='<strong>'+(avg!==null?avg.toFixed(1):'—')+'</strong>'; applyColor(el,avg,rules); }
 }
 document.getElementById('btnSaveGrades').onclick=async()=>{
-  const gid=document.getElementById('cGroup').value; const trim=document.getElementById('cTrim').value; if(!gid) return;
-  const recs={};
-  document.querySelectorAll('#califWrap input').forEach(inp=>{ const sid=inp.dataset.s,c=inp.dataset.c;
-    if(!recs[sid]) recs[sid]={}; if(inp.value!=='') recs[sid][c]=parseFloat(inp.value); });
+  const gid=document.getElementById('cGroup').value; const g=currentGroup(gid); const trim=document.getElementById('cTrim').value; if(!gid||!g) return;
+  const crit=g.criteria||DEFAULT_CRIT; const recs={};
+  (g.students||[]).forEach(s=>{
+    const raw={};
+    crit.forEach((c,i)=>{ if(c.type==='rubrica'){ const rv=(rubricCache[c.rubricId]||{})[s.id]; if(rv!==undefined&&rv!==null) raw[i]=rv; } else if(c.type!=='formula'){ const inp=document.querySelector(`input[data-s="${s.id}"][data-c="${i}"]`); if(inp&&inp.value!=='') raw[i]=parseFloat(inp.value); } });
+    const byIndex=computeRowValues(raw,crit);
+    const merged={}; crit.forEach((c,i)=>{ if(byIndex[i]!==undefined&&!isNaN(byIndex[i])) merged[i]=byIndex[i]; });
+    recs[s.id]=merged;
+  });
   gradesDoc[trim]=recs;
   if(db){ await db.doc('grades/'+gid).set({records:gradesDoc}); }
   renderResumen(); alert('Calificaciones guardadas.');
@@ -661,7 +1003,7 @@ document.getElementById('alBuscar').oninput=(e)=>{
 };
 async function loadFicha(s,g){
   const wrap=document.getElementById('alFicha');
-  wrap.innerHTML=`<div class="card"><h2>${s.name}</h2><p class="muted">${g.name} · ${g.materia||''}</p><div id="fichaAsist">Cargando asistencia…</div><div id="fichaCalif">Cargando calificaciones…</div><h3>Citatorios</h3><div id="fichaCit" class="muted">Cargando…</div><h3>Observaciones</h3><div id="fichaObs" class="muted">Cargando…</div><textarea id="obsNueva" placeholder="Nueva observación…"></textarea><button class="btn small" id="obsGuardar">Agregar observación</button></div>`;
+  wrap.innerHTML=`<div class="card"><h2>${s.name}</h2><p class="muted">${g.name} · ${g.materia||''}</p><div id="fichaAsist">Cargando asistencia…</div><div id="fichaCalif">Cargando calificaciones…</div><h3>Citatorios</h3><div id="fichaCit" class="muted">Cargando…</div><h3>Observaciones</h3><div id="fichaObs" class="muted">Cargando…</div><textarea id="obsNueva" placeholder="Nueva observación…"></textarea><button class="btn small" id="obsGuardar">Agregar observación</button><br><button class="btn secondary" id="btnBoletaPDF" style="margin-top:10px">📄 Generar boleta (PDF)</button></div>`;
   if(!db) return;
   // Asistencia
   try{
@@ -669,7 +1011,7 @@ async function loadFicha(s,g){
     const tally={present:0,absent:0,late:0,justified:0};
     snap.docs.forEach(d=>{ const st=(d.data().records||{})[s.id]; if(st&&tally[st]!==undefined) tally[st]++; });
     const total=tally.present+tally.absent+tally.late+tally.justified;
-    document.getElementById('fichaAsist').innerHTML=`<h3>Asistencia</h3>`+(total?`<span class="tag present">Presente: ${tally.present}</span> <span class="tag absent">Ausente: ${tally.absent}</span> <span class="tag late">Retardo: ${tally.late}</span> <span class="tag justified">Justificada: ${tally.justified}</span>`:'<span class="muted">Sin registros aún.</span>');
+    document.getElementById('fichaAsist').innerHTML=`<h3>Asistencia${total?' — '+Math.round(tally.present/total*100)+'% de asistencia':''}</h3>`+(total?`<span class="tag present">Presente: ${tally.present}</span> <span class="tag absent">Ausente: ${tally.absent}</span> <span class="tag late">Retardo: ${tally.late}</span> <span class="tag justified">Justificada: ${tally.justified}</span>`:'<span class="muted">Sin registros aún.</span>');
   }catch(e){ document.getElementById('fichaAsist').textContent=''; }
   // Calificaciones
   try{
@@ -686,7 +1028,7 @@ async function loadFicha(s,g){
     const d=await db.doc('citatorios/'+s.id).get(); const cits=(d.exists&&d.data().entries)||[];
     const el=document.getElementById('fichaCit');
     el.innerHTML = cits.length ? cits.map((c,i)=>`<div style="margin-bottom:6px"><strong>${c.fecha}</strong> — Folio ${c.folio} — ${(c.motivos||[]).join(', ')||'sin motivo especificado'} <button class="btn small secondary" data-ci="${i}">Ver</button></div>`).join('') : 'Sin citatorios generados.';
-    el.querySelectorAll('[data-ci]').forEach(b=>b.onclick=()=>{ const p=document.getElementById('citPreview'); p.style.display='block'; p.textContent=cits[b.dataset.ci].text; document.getElementById('btnPrintCit').style.display='inline-block'; document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active')); document.querySelector('[data-tab=docs]').classList.add('active'); ['grupos','alumnos','asistencia','calif','docs'].forEach(t=>document.getElementById('tab-'+t).style.display = t==='docs'?'block':'none'); p.scrollIntoView({behavior:'smooth'}); });
+    el.querySelectorAll('[data-ci]').forEach(b=>b.onclick=()=>{ const p=document.getElementById('citPreview'); p.style.display='block'; p.textContent=cits[b.dataset.ci].text; document.getElementById('btnPrintCit').style.display='inline-block'; document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active')); document.querySelector('[data-tab=docs]').classList.add('active'); ['inicio','grupos','alumnos','asistencia','plano','horario','diario','rubricas','calif','examenes','docs'].forEach(t=>document.getElementById('tab-'+t).style.display = t==='docs'?'block':'none'); p.scrollIntoView({behavior:'smooth'}); });
   }catch(e){ document.getElementById('fichaCit').textContent=''; }
   // Observaciones
   let notes=[];
@@ -698,6 +1040,7 @@ async function loadFicha(s,g){
     if(db){ await db.doc('notes/'+s.id).set({entries:notes}); }
     document.getElementById('obsNueva').value=''; renderObs(notes);
   };
+  document.getElementById('btnBoletaPDF').onclick=async()=>{ const doc=new (window.jspdf.jsPDF)(); await drawBoleta(doc,g,s,0); doc.save('Boleta_'+s.name.replace(/\s+/g,'_')+'.pdf'); };
 }
 function renderObs(notes){
   const el=document.getElementById('fichaObs');
@@ -800,6 +1143,513 @@ document.getElementById('btnDriveLoad').onclick=async()=>{
 };
 window.addEventListener('load',()=>setTimeout(initGoogle,300));
 
+// Plano de clase
+let seatEditMode=false, seatSelectedStudent=null;
+document.getElementById('pmDate').valueAsDate=new Date();
+document.getElementById('pmGroup').onchange=loadSeatMap;
+document.getElementById('pmDate').onchange=renderSeatGrid;
+document.getElementById('btnEditSeats').onclick=()=>{ seatEditMode=!seatEditMode; seatSelectedStudent=null; document.getElementById('btnEditSeats').textContent = seatEditMode? '✅ Terminar acomodo' : '✏️ Acomodar alumnos'; renderSeatGrid(); };
+document.getElementById('btnApplyGrid').onclick=async()=>{
+  const gid=document.getElementById('pmGroup').value; const g=currentGroup(gid); if(!g) return;
+  const rows=parseInt(document.getElementById('pmRows').value)||5, cols=parseInt(document.getElementById('pmCols').value)||6;
+  g.seatGrid={rows,cols};
+  if(db) await db.doc('groups/'+gid).update({seatGrid:g.seatGrid});
+  renderSeatGrid();
+};
+async function loadSeatMap(){
+  const gid=document.getElementById('pmGroup').value; const g=currentGroup(gid);
+  if(!g){ document.getElementById('seatGrid').innerHTML=''; document.getElementById('seatPalette').innerHTML=''; return; }
+  document.getElementById('pmRows').value=(g.seatGrid&&g.seatGrid.rows)||5;
+  document.getElementById('pmCols').value=(g.seatGrid&&g.seatGrid.cols)||6;
+  await renderSeatGrid();
+}
+async function renderSeatGrid(){
+  const gid=document.getElementById('pmGroup').value; const g=currentGroup(gid);
+  const gridEl=document.getElementById('seatGrid'), paletteEl=document.getElementById('seatPalette');
+  gridEl.innerHTML=''; paletteEl.innerHTML='';
+  if(!g) return;
+  const rows=(g.seatGrid&&g.seatGrid.rows)||5, cols=(g.seatGrid&&g.seatGrid.cols)||6;
+  const assign=g.seatAssign||{};
+  const assignedIds=new Set(Object.values(assign));
+  const date=document.getElementById('pmDate').value;
+  let saved={};
+  if(db&&date){ try{ const d=await db.doc('attendance/'+gid+'_'+date).get(); saved=(d.exists&&d.data().records)||{}; }catch(e){} }
+  if(seatEditMode){
+    const unassigned=(g.students||[]).filter(s=>!assignedIds.has(s.id));
+    if(!unassigned.length) paletteEl.innerHTML='<span class="muted">Todos los alumnos ya tienen lugar.</span>';
+    unassigned.forEach(s=>{
+      const chip=document.createElement('button'); chip.className='btn small'+(seatSelectedStudent===s.id?'':' secondary'); chip.textContent=s.name;
+      chip.onclick=()=>{ seatSelectedStudent=(seatSelectedStudent===s.id)?null:s.id; renderSeatGrid(); };
+      paletteEl.appendChild(chip);
+    });
+  }
+  gridEl.style.display='grid'; gridEl.style.gridTemplateColumns=`repeat(${cols}, 1fr)`; gridEl.style.gap='6px';
+  const colors={present:'#16a34a',absent:'#e11d48',late:'#f59e0b',justified:'#2563eb'};
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const key=r+'_'+c; const sid=assign[key];
+    const desk=document.createElement('div');
+    desk.style.cssText='border:1px solid var(--line);border-radius:8px;min-height:52px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.72rem;padding:4px;cursor:pointer';
+    if(sid){
+      const s=(g.students||[]).find(x=>x.id===sid);
+      desk.textContent=s?s.name:'?';
+      const st=saved[sid];
+      if(st&&colors[st]){ desk.style.background=colors[st]; desk.style.color='#fff'; }
+      desk.onclick=async()=>{
+        if(seatEditMode){ const na=Object.assign({},assign); delete na[key]; g.seatAssign=na; if(db) await db.doc('groups/'+gid).update({seatAssign:na}); renderSeatGrid(); return; }
+        const order=['present','absent','late','justified',undefined]; const next=order[(order.indexOf(st)+1)%order.length];
+        const ns=Object.assign({},saved); if(next) ns[sid]=next; else delete ns[sid];
+        if(db&&date) await db.doc('attendance/'+gid+'_'+date).set({groupId:gid,date,records:ns});
+        renderSeatGrid();
+      };
+    } else {
+      desk.textContent='+'; desk.style.color='var(--sub)';
+      desk.onclick=async()=>{
+        if(seatEditMode&&seatSelectedStudent){ const na=Object.assign({},assign); na[key]=seatSelectedStudent; g.seatAssign=na; seatSelectedStudent=null; if(db) await db.doc('groups/'+gid).update({seatAssign:na}); renderSeatGrid(); }
+      };
+    }
+    gridEl.appendChild(desk);
+  }
+}
+document.getElementById('btnRandomStudent').onclick=async()=>{
+  const gid=document.getElementById('pmGroup').value; const g=currentGroup(gid);
+  if(!g||!(g.students||[]).length) return alert('Selecciona un grupo con alumnos.');
+  const date=document.getElementById('pmDate').value; let saved={};
+  if(db&&date){ try{ const d=await db.doc('attendance/'+gid+'_'+date).get(); saved=(d.exists&&d.data().records)||{}; }catch(e){} }
+  let pool=(g.students||[]).filter(s=>saved[s.id]==='present');
+  if(!pool.length) pool=g.students;
+  alert('🎲 '+pool[Math.floor(Math.random()*pool.length)].name);
+};
+
+// Diario de clase
+document.getElementById('dGroup').onchange=()=>{
+  const g=currentGroup(document.getElementById('dGroup').value);
+  document.getElementById('dStudent').innerHTML='<option value="">— Grupo en general —</option>'+(g?.students||[]).map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  renderDiario();
+};
+async function renderDiario(){
+  const gid=document.getElementById('dGroup').value; const wrap=document.getElementById('diarioList');
+  if(!gid){ wrap.textContent='Selecciona un grupo.'; return; }
+  let entries=[]; if(db){ try{ const d=await db.doc('diario/'+gid).get(); entries=(d.exists&&d.data().entries)||[]; }catch(e){} }
+  if(!entries.length){ wrap.textContent='Sin registros aún.'; return; }
+  const labels={incidente:'Incidente',minuta:'Minuta con padres',recordatorio:'Recordatorio',otro:'Otro'};
+  wrap.innerHTML=entries.map(e=>`<div style="border-bottom:1px solid var(--line);padding:6px 0"><strong>${e.date}</strong> — <span class="tag" style="background:var(--accent2)">${labels[e.tipo]||e.tipo}</span>${e.studentName?' · '+e.studentName:''}<div>${e.text}</div></div>`).join('');
+}
+document.getElementById('btnAddDiario').onclick=async()=>{
+  const gid=document.getElementById('dGroup').value; if(!gid) return alert('Selecciona un grupo.');
+  const tipo=document.getElementById('dTipo').value;
+  const ssel=document.getElementById('dStudent'); const sid=ssel.value; const sname=sid? ssel.options[ssel.selectedIndex].textContent : '';
+  const text=document.getElementById('dTexto').value.trim(); if(!text) return alert('Escribe algo para el diario.');
+  let entries=[]; if(db){ try{ const d=await db.doc('diario/'+gid).get(); entries=(d.exists&&d.data().entries)||[]; }catch(e){} }
+  entries.unshift({date:new Date().toLocaleDateString('es-MX'),tipo,studentId:sid||null,studentName:sname,text});
+  if(db) await db.doc('diario/'+gid).set({entries});
+  document.getElementById('dTexto').value='';
+  renderDiario();
+};
+
+
+// ===== Rúbricas y auto/coevaluación =====
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let rubrics=[], editingRubId=null, rbLevels=[], rbCriteria=[], evSel={}, rubricCache={};
+const RUB_DEFAULT_LEVELS=[{name:'Excelente',points:10},{name:'Satisfactorio',points:8},{name:'Suficiente',points:6},{name:'Insuficiente',points:5}];
+const RUB_TEMPLATE=[
+  {name:'Dominio del contenido',desc:['Explica el tema con precisión y profundidad','Explica el tema con pocos errores','Muestra un dominio básico del tema','Presenta errores importantes o no domina el tema']},
+  {name:'Organización',desc:['Estructura clara y lógica en todo momento','Estructura clara con detalles menores por mejorar','Estructura parcial, con saltos de ideas','No se identifica una estructura']},
+  {name:'Participación y colaboración',desc:['Aporta siempre y apoya al equipo','Aporta con frecuencia','Aporta ocasionalmente','Casi no participa']},
+  {name:'Presentación y claridad',desc:['Comunica con claridad, orden y buen uso del lenguaje','Comunica con claridad, con detalles menores','Comunica con dificultad en algunas partes','Es difícil entender lo que comunica']}
+];
+async function loadRubrics(){
+  try{ const snap=await db.collection('rubricas').get(); rubrics=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.name||'').localeCompare(b.name||'')); }catch(e){ rubrics=[]; }
+  renderRubList(); fillRubSelect();
+}
+function renderRubList(){
+  const wrap=document.getElementById('rubList');
+  if(!rubrics.length){ wrap.innerHTML='<span class="muted">Aún no tienes rúbricas.</span>'; return; }
+  wrap.innerHTML='';
+  rubrics.forEach(r=>{
+    const row=document.createElement('div'); row.className='groupItem';
+    row.innerHTML=`<div><strong>${esc(r.name)}</strong><div class="muted">${(r.criteria||[]).length} criterios · ${(r.levels||[]).length} niveles</div></div>`;
+    const ed=document.createElement('button'); ed.className='btn small secondary'; ed.textContent='Editar'; ed.onclick=()=>openRubEditor(r);
+    const del=document.createElement('button'); del.className='btn small secondary'; del.textContent='Eliminar';
+    del.onclick=async()=>{ if(confirm('¿Eliminar la rúbrica "'+r.name+'"?')){ await db.doc('rubricas/'+r.id).delete(); await loadRubrics(); } };
+    row.appendChild(ed); row.appendChild(del); wrap.appendChild(row);
+  });
+}
+function openRubEditor(r){
+  editingRubId=r?r.id:null;
+  rbLevels=JSON.parse(JSON.stringify(r?r.levels:RUB_DEFAULT_LEVELS));
+  rbCriteria=r?JSON.parse(JSON.stringify(r.criteria)):[{name:'',desc:rbLevels.map(()=>'')}];
+  document.getElementById('rbName').value=r?r.name:'';
+  const w=(r&&r.weights)||{docente:70,auto:15,co:15};
+  document.getElementById('rbWDoc').value=w.docente; document.getElementById('rbWAuto').value=w.auto; document.getElementById('rbWCo').value=w.co;
+  document.getElementById('rubEditorCard').style.display='block';
+  paintRubEditor();
+  document.getElementById('rubEditorCard').scrollIntoView({behavior:'smooth'});
+}
+function syncRubEditor(){
+  rbLevels=[...document.querySelectorAll('#rbLevels .rlRow')].map(r=>({name:r.querySelector('.rlName').value||'Nivel',points:parseFloat(r.querySelector('.rlPts').value)||0}));
+  rbCriteria=[...document.querySelectorAll('#rbCriteria tbody tr')].map(tr=>({name:tr.querySelector('.rcName').value,desc:[...tr.querySelectorAll('.rcDesc')].map(t=>t.value)}));
+}
+function paintRubEditor(){
+  const lv=document.getElementById('rbLevels'); lv.innerHTML='';
+  rbLevels.forEach((l,i)=>{
+    const row=document.createElement('div'); row.className='row rlRow'; row.style.marginBottom='4px';
+    row.innerHTML=`<input type="text" class="rlName" value="${esc(l.name)}" style="flex:2" placeholder="Nombre del nivel"><input type="number" class="rlPts" value="${l.points}" step="0.5" style="flex:1" placeholder="Puntos"><button class="btn small secondary" data-dell="${i}">✕</button>`;
+    lv.appendChild(row);
+  });
+  lv.querySelectorAll('[data-dell]').forEach(b=>b.onclick=()=>{
+    if(rbLevels.length<=2) return alert('Se necesitan al menos 2 niveles.');
+    syncRubEditor(); const li=parseInt(b.dataset.dell); rbLevels.splice(li,1); rbCriteria.forEach(c=>c.desc.splice(li,1)); paintRubEditor();
+  });
+  lv.querySelectorAll('.rlName,.rlPts').forEach(inp=>inp.onchange=()=>{ syncRubEditor(); paintRubEditor(); });
+  let html='<table><thead><tr><th>Criterio</th>'+rbLevels.map(l=>`<th>${esc(l.name)} (${l.points})</th>`).join('')+'<th></th></tr></thead><tbody>';
+  rbCriteria.forEach((c,i)=>{
+    html+=`<tr><td><input type="text" class="rcName" value="${esc(c.name)}" style="min-width:120px" placeholder="Criterio"></td>`
+      +rbLevels.map((l,li)=>`<td><textarea class="rcDesc" style="min-height:60px;min-width:130px;font-size:.78rem">${esc((c.desc||[])[li]||'')}</textarea></td>`).join('')
+      +`<td><button class="btn small secondary" data-delc="${i}">✕</button></td></tr>`;
+  });
+  html+='</tbody></table>';
+  const cr=document.getElementById('rbCriteria'); cr.innerHTML=html;
+  cr.querySelectorAll('[data-delc]').forEach(b=>b.onclick=()=>{ syncRubEditor(); rbCriteria.splice(parseInt(b.dataset.delc),1); paintRubEditor(); });
+}
+document.getElementById('btnNewRub').onclick=()=>openRubEditor(null);
+document.getElementById('btnCancelRub').onclick=()=>{ document.getElementById('rubEditorCard').style.display='none'; };
+document.getElementById('btnAddLevel').onclick=()=>{ syncRubEditor(); rbLevels.push({name:'Nuevo nivel',points:5}); rbCriteria.forEach(c=>c.desc.push('')); paintRubEditor(); };
+document.getElementById('btnAddRubCrit').onclick=()=>{ syncRubEditor(); rbCriteria.push({name:'',desc:rbLevels.map(()=>'')}); paintRubEditor(); };
+document.getElementById('btnRubTemplate').onclick=()=>{
+  syncRubEditor();
+  if(rbCriteria.some(c=>c.name.trim()) && !confirm('Esto reemplaza los niveles y criterios actuales. ¿Continuar?')) return;
+  rbLevels=JSON.parse(JSON.stringify(RUB_DEFAULT_LEVELS)); rbCriteria=JSON.parse(JSON.stringify(RUB_TEMPLATE));
+  if(!document.getElementById('rbName').value.trim()) document.getElementById('rbName').value='Rúbrica estándar';
+  paintRubEditor();
+};
+document.getElementById('btnSaveRub').onclick=async()=>{
+  syncRubEditor();
+  const name=document.getElementById('rbName').value.trim(); if(!name) return alert('Ponle nombre a la rúbrica.');
+  const criteria=rbCriteria.filter(c=>c.name.trim()); if(!criteria.length) return alert('Agrega al menos un criterio con nombre.');
+  const weights={docente:parseFloat(document.getElementById('rbWDoc').value)||0,auto:parseFloat(document.getElementById('rbWAuto').value)||0,co:parseFloat(document.getElementById('rbWCo').value)||0};
+  const id=editingRubId||uid();
+  await db.doc('rubricas/'+id).set({name,levels:rbLevels,criteria,weights,createdAt:Date.now()});
+  editingRubId=id; await loadRubrics(); alert('Rúbrica guardada.');
+};
+
+// Cálculo de puntajes
+function scoreOf(rub,sel){
+  if(!sel) return null;
+  const vals=rub.criteria.map((c,ci)=>(sel[ci]!==undefined)?Number((rub.levels[sel[ci]]||{}).points):null).filter(v=>v!==null&&!isNaN(v));
+  return vals.length? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+}
+function studentRubricScore(rub,rec){
+  rec=rec||{};
+  const parts={docente:scoreOf(rub,rec.docente), auto:scoreOf(rub,rec.auto)};
+  const cos=Object.values(rec.co||{}).map(x=>scoreOf(rub,x)).filter(v=>v!==null);
+  parts.co=cos.length? cos.reduce((a,b)=>a+b,0)/cos.length : null;
+  const w=rub.weights||{docente:70,auto:15,co:15}; let sum=0,ws=0;
+  ['docente','auto','co'].forEach(k=>{ if(parts[k]!==null&&(w[k]||0)>0){ sum+=parts[k]*w[k]; ws+=w[k]; } });
+  return {parts,final:ws?sum/ws:null};
+}
+async function loadEvalDoc(gid,rid,trim){
+  try{ const d=await db.doc('evaluaciones/'+gid+'_'+rid+'_'+trim).get(); return (d.exists&&d.data().records)||{}; }catch(e){ return {}; }
+}
+async function rubricScoresFor(gid,rid,trim){
+  const rub=rubrics.find(r=>r.id===rid); if(!rub) return {};
+  const recs=await loadEvalDoc(gid,rid,trim); const out={};
+  Object.keys(recs).forEach(sid=>{ const r=studentRubricScore(rub,recs[sid]); if(r.final!==null) out[sid]=r.final; });
+  return out;
+}
+
+// Evaluar
+function evCtx(){
+  const gid=document.getElementById('evGroup').value, rid=document.getElementById('evRub').value;
+  return {gid,rid,g:currentGroup(gid),rub:rubrics.find(r=>r.id===rid),trim:document.getElementById('evTrim').value,tipo:document.getElementById('evTipo').value};
+}
+function fillRubSelect(){
+  const sel=document.getElementById('evRub'); const cur=sel.value;
+  sel.innerHTML=rubrics.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  renderEvSetup();
+}
+function renderEvSetup(){
+  const {g,tipo}=evCtx();
+  const opts=(g?.students||[]).map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  const es=document.getElementById('evStudent'), ee=document.getElementById('evEvaluator'); const ks=es.value, ke=ee.value;
+  es.innerHTML=opts; ee.innerHTML=opts;
+  if([...es.options].some(o=>o.value===ks)) es.value=ks;
+  if([...ee.options].some(o=>o.value===ke)) ee.value=ke;
+  document.getElementById('evEvalWrap').style.display=tipo==='co'?'block':'none';
+  renderEvMatrix(); renderEvSummary();
+}
+async function renderEvMatrix(){
+  const {gid,rid,g,rub,trim,tipo}=evCtx();
+  const wrap=document.getElementById('evMatrix'), saveBtn=document.getElementById('btnSaveEval');
+  wrap.innerHTML=''; saveBtn.style.display='none';
+  if(!g||!rub){ wrap.innerHTML='<span class="muted">Crea una rúbrica y selecciona un grupo.</span>'; return; }
+  const sid=document.getElementById('evStudent').value; if(!sid) return;
+  const recs=await loadEvalDoc(gid,rid,trim); const rec=recs[sid]||{};
+  const evalr=document.getElementById('evEvaluator').value;
+  evSel=Object.assign({}, tipo==='co'?((rec.co||{})[evalr]||{}):(rec[tipo]||{}));
+  let html='<div style="overflow-x:auto"><table><thead><tr><th>Criterio</th>'+rub.levels.map(l=>`<th>${esc(l.name)} (${l.points})</th>`).join('')+'</tr></thead><tbody>';
+  rub.criteria.forEach((c,ci)=>{
+    html+=`<tr><td><strong>${esc(c.name)}</strong></td>`+rub.levels.map((l,li)=>`<td class="evCell" data-ci="${ci}" data-li="${li}" style="cursor:pointer;font-size:.75rem;min-width:110px">${esc((c.desc||[])[li]||'')||'—'}</td>`).join('')+'</tr>';
+  });
+  html+='</tbody></table></div>';
+  wrap.innerHTML=html;
+  wrap.querySelectorAll('.evCell').forEach(td=>td.onclick=()=>{ evSel[td.dataset.ci]=parseInt(td.dataset.li); paintEvSel(); });
+  paintEvSel(); saveBtn.style.display='inline-block';
+}
+function paintEvSel(){
+  document.querySelectorAll('#evMatrix .evCell').forEach(td=>{ const on=evSel[td.dataset.ci]===parseInt(td.dataset.li); td.style.background=on?'var(--accent)':''; td.style.color=on?'#fff':''; });
+}
+async function renderEvSummary(){
+  const {gid,rid,g,rub,trim}=evCtx(); const wrap=document.getElementById('evSummary');
+  if(!g||!rub){ wrap.textContent='Selecciona grupo y rúbrica.'; return; }
+  const recs=await loadEvalDoc(gid,rid,trim);
+  const f=v=>(v===null||v===undefined)?'—':v.toFixed(1);
+  let html='<table><thead><tr><th>Alumno</th><th>Docente</th><th>Auto</th><th>Coev.</th><th>Final</th></tr></thead><tbody>';
+  (g.students||[]).forEach(s=>{ const r=studentRubricScore(rub,recs[s.id]);
+    html+=`<tr><td>${esc(s.name)}</td><td>${f(r.parts.docente)}</td><td>${f(r.parts.auto)}</td><td>${f(r.parts.co)}</td><td><strong>${f(r.final)}</strong></td></tr>`; });
+  wrap.innerHTML=html+'</tbody></table>';
+}
+document.getElementById('btnSaveEval').onclick=async()=>{
+  const {gid,rid,rub,trim,tipo}=evCtx(); const sid=document.getElementById('evStudent').value;
+  const evalr=document.getElementById('evEvaluator').value;
+  if(!sid||!rub) return;
+  if(tipo==='co' && (!evalr||evalr===sid)) return alert('Elige un compañero evaluador distinto al alumno evaluado.');
+  const recs=await loadEvalDoc(gid,rid,trim); const rec=recs[sid]||{};
+  if(tipo==='co'){ rec.co=rec.co||{}; rec.co[evalr]=Object.assign({},evSel); } else rec[tipo]=Object.assign({},evSel);
+  recs[sid]=rec;
+  await db.doc('evaluaciones/'+gid+'_'+rid+'_'+trim).set({records:recs});
+  const es=document.getElementById('evStudent'); const name=es.options[es.selectedIndex].textContent;
+  if(es.selectedIndex<es.options.length-1) es.selectedIndex=es.selectedIndex+1;
+  await renderEvMatrix(); renderEvSummary();
+  document.getElementById('evStatus').textContent='Guardado: '+name+' · '+new Date().toLocaleTimeString('es-MX');
+};
+document.getElementById('evGroup').onchange=renderEvSetup;
+document.getElementById('evTipo').onchange=renderEvSetup;
+document.getElementById('evRub').onchange=()=>{ renderEvMatrix(); renderEvSummary(); };
+document.getElementById('evTrim').onchange=()=>{ renderEvMatrix(); renderEvSummary(); };
+document.getElementById('evStudent').onchange=renderEvMatrix;
+document.getElementById('evEvaluator').onchange=renderEvMatrix;
+
+// Boletas en PDF
+async function studentTrimAvgs(gid,g,sid){
+  const crit=g.criteria||DEFAULT_CRIT; let recs={};
+  if(db){ try{ const d=await db.doc('grades/'+gid).get(); recs=(d.exists&&d.data().records)||{}; }catch(e){} }
+  return [1,2,3].map(t=>{ const r=(recs[t]||{})[sid]||{}; let sum=0,wsum=0;
+    crit.forEach((c,i)=>{ if(r[i]!==undefined){ sum+=r[i]*c.weight; wsum+=c.weight; } }); return wsum? sum/wsum : null; });
+}
+async function studentAttendanceTally(gid,sid){
+  const tally={present:0,absent:0,late:0,justified:0};
+  if(db){ try{ const snap=await db.collection('attendance').where('groupId','==',gid).get();
+    snap.docs.forEach(d=>{ const st=(d.data().records||{})[sid]; if(st&&tally[st]!==undefined) tally[st]++; }); }catch(e){} }
+  return tally;
+}
+async function drawBoleta(doc,g,s,pageIndex){
+  if(pageIndex>0) doc.addPage();
+  const trims=await studentTrimAvgs(g.id,g,s.id); const valid=trims.filter(v=>v!==null);
+  const gen=valid.length? valid.reduce((a,b)=>a+b,0)/valid.length : null;
+  const tally=await studentAttendanceTally(g.id,s.id); const total=tally.present+tally.absent+tally.late+tally.justified;
+  const pct=total? Math.round(tally.present/total*100) : null;
+  doc.setFontSize(16); doc.text('Boleta de calificaciones',105,20,{align:'center'});
+  doc.setFontSize(11); doc.text('Grupo: '+g.name+'   Asignatura: '+(g.materia||'—'),20,32);
+  doc.text('Alumno(a): '+s.name,20,40);
+  doc.text('Fecha de emisión: '+new Date().toLocaleDateString('es-MX'),20,48);
+  doc.setFontSize(12); doc.text('Calificaciones por trimestre',20,62);
+  doc.setFontSize(10);
+  const heads=['Trimestre 1','Trimestre 2','Trimestre 3','Promedio general'];
+  const vals=[...trims.map(v=>v!==null?v.toFixed(1):'—'), gen!==null?gen.toFixed(1):'—'];
+  let x=20; heads.forEach((h,i)=>{ doc.rect(x,68,42,10); doc.rect(x,78,42,10); doc.text(h,x+21,74,{align:'center'}); doc.text(String(vals[i]),x+21,85,{align:'center'}); x+=42; });
+  doc.setFontSize(12); doc.text('Asistencia',20,105);
+  doc.setFontSize(10);
+  doc.text('Presente: '+tally.present+'   Ausente: '+tally.absent+'   Retardo: '+tally.late+'   Justificada: '+tally.justified,20,113);
+  doc.text('Porcentaje de asistencia: '+(pct!==null?pct+'%':'—'),20,121);
+  doc.line(20,160,90,160); doc.text('Firma del padre/madre o tutor',20,166);
+  doc.line(120,160,190,160); doc.text('Firma del docente',120,166);
+}
+document.getElementById('btnBoletasGrupo').onclick=async()=>{
+  const gid=document.getElementById('cGroup').value; const g=currentGroup(gid);
+  if(!g||!(g.students||[]).length) return alert('Selecciona un grupo con alumnos.');
+  const doc=new (window.jspdf.jsPDF)();
+  for(let i=0;i<g.students.length;i++) await drawBoleta(doc,g,g.students[i],i);
+  doc.save('Boletas_'+g.name.replace(/\s+/g,'_')+'.pdf');
+};
+
+// Banco de reactivos y generador de examen
+let reactivos=[];
+async function loadReactivos(){ try{ const snap=await db.collection('reactivos').get(); reactivos=snap.docs.map(d=>({id:d.id,...d.data()})); }catch(e){ reactivos=[]; } renderReactivos(); }
+document.getElementById('rxTipo').onchange=()=>{
+  const isOpt=document.getElementById('rxTipo').value==='opcion';
+  document.getElementById('rxOpcionesWrap').style.display=isOpt?'block':'none';
+  document.getElementById('rxVFWrap').style.display=isOpt?'none':'block';
+};
+document.getElementById('btnAddReactivo').onclick=async()=>{
+  const materia=document.getElementById('rxMateria').value, grado=document.getElementById('rxGrado').value, trimestre=document.getElementById('rxTrim').value;
+  const tema=document.getElementById('rxTema').value.trim(), tipo=document.getElementById('rxTipo').value;
+  const pregunta=document.getElementById('rxPregunta').value.trim(); if(!pregunta) return alert('Escribe la pregunta.');
+  let opciones=[], correcta=0;
+  if(tipo==='opcion'){ opciones=[...document.querySelectorAll('.rxOpt')].map(i=>i.value.trim()); if(opciones.some(o=>!o)) return alert('Llena las 4 opciones.'); correcta=parseInt(document.querySelector('input[name=rxCorrecta]:checked').value); }
+  else { opciones=['Verdadero','Falso']; correcta=parseInt(document.querySelector('input[name=rxVF]:checked').value); }
+  await db.doc('reactivos/'+uid()).set({materia,grado,trimestre,tema,tipo,pregunta,opciones,correcta,createdAt:Date.now()});
+  document.getElementById('rxPregunta').value=''; document.querySelectorAll('.rxOpt').forEach(i=>i.value='');
+  await loadReactivos(); alert('Reactivo agregado.');
+};
+function filteredReactivos(){
+  const m=document.getElementById('rxFMateria').value, gr=document.getElementById('rxFGrado').value, tr=document.getElementById('rxFTrim').value;
+  return reactivos.filter(r=>(!m||r.materia===m)&&(!gr||r.grado===gr)&&(!tr||r.trimestre===tr));
+}
+['rxFMateria','rxFGrado','rxFTrim'].forEach(id=>document.getElementById(id).onchange=()=>{ renderReactivos(); renderExManual(); });
+function renderReactivos(){
+  const list=filteredReactivos(); const wrap=document.getElementById('rxList');
+  if(!list.length){ wrap.innerHTML='Sin reactivos con estos filtros.'; return; }
+  const byTema={}; list.forEach(r=>{ (byTema[r.tema||'(sin tema)']=byTema[r.tema||'(sin tema)']||[]).push(r); });
+  wrap.innerHTML=Object.keys(byTema).map(t=>'<h3>'+t+'</h3>'+byTema[t].map(r=>`<div class="groupItem"><div>${r.pregunta}</div><button class="btn small secondary" data-delrx="${r.id}">Eliminar</button></div>`).join('')).join('');
+  wrap.querySelectorAll('[data-delrx]').forEach(b=>b.onclick=async()=>{ await db.doc('reactivos/'+b.dataset.delrx).delete(); await loadReactivos(); });
+}
+document.getElementById('exModo').onchange=()=>{
+  const manual=document.getElementById('exModo').value==='manual';
+  document.getElementById('exNWrap').style.display=manual?'none':'block';
+  document.getElementById('exManualList').style.display=manual?'block':'none';
+  if(manual) renderExManual();
+};
+function renderExManual(){
+  const list=filteredReactivos(); const wrap=document.getElementById('exManualList');
+  if(!list.length){ wrap.innerHTML='Sin reactivos con estos filtros.'; return; }
+  wrap.innerHTML=list.map(r=>`<label class="chkrow"><input type="checkbox" class="exPick" value="${r.id}"><span>${r.pregunta}</span></label>`).join('');
+}
+document.getElementById('btnGenExamen').onclick=()=>{
+  const modo=document.getElementById('exModo').value; const titulo=document.getElementById('exTitulo').value||'Examen';
+  let list=filteredReactivos(); let chosen=[];
+  if(modo==='aleatorio'){ const n=parseInt(document.getElementById('exN').value)||10; const pool=[...list]; for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; } chosen=pool.slice(0,n); }
+  else { const ids=new Set([...document.querySelectorAll('.exPick:checked')].map(i=>i.value)); chosen=list.filter(r=>ids.has(r.id)); }
+  if(!chosen.length) return alert('No hay reactivos seleccionados o el banco está vacío para estos filtros.');
+  let examTxt=titulo.toUpperCase()+'\n\nNombre del alumno: _______________________________  Fecha: __________\n\n';
+  let ansTxt='HOJA DE RESPUESTAS — '+titulo+'\n\n';
+  chosen.forEach((r,i)=>{
+    examTxt+=(i+1)+'. '+r.pregunta+'\n';
+    r.opciones.forEach((o,j)=>examTxt+='   '+String.fromCharCode(97+j)+') '+o+'\n');
+    examTxt+='\n';
+    ansTxt+=(i+1)+'. '+String.fromCharCode(97+r.correcta)+') '+r.opciones[r.correcta]+'\n';
+  });
+  const ep=document.getElementById('examenPreview'); ep.style.display='block'; ep.textContent=examTxt;
+  const rp=document.getElementById('respuestasPreview'); rp.style.display='block'; rp.textContent=ansTxt;
+  document.getElementById('btnPrintExamen').style.display='inline-block';
+  document.getElementById('btnPrintRespuestas').style.display='inline-block';
+};
+document.getElementById('btnPrintExamen').onclick=()=>{ const rp=document.getElementById('respuestasPreview'); const prev=rp.style.display; rp.style.display='none'; window.print(); rp.style.display=prev; };
+document.getElementById('btnPrintRespuestas').onclick=()=>{ const ep=document.getElementById('examenPreview'); const prev=ep.style.display; ep.style.display='none'; window.print(); ep.style.display=prev; };
+loadReactivos();
+
+// Horario de clases
+const DIAS=['Lunes','Martes','Miércoles','Jueves','Viernes'];
+const DEFAULT_PERIODS=()=>[1,2,3,4,5,6].map(n=>({label:n+'a hora',time:''}));
+let periods=[], slots={};
+async function loadHorario(){
+  if(db){ try{ const d=await db.doc('horario/config').get();
+    if(d.exists){ periods=d.data().periods||DEFAULT_PERIODS(); slots=d.data().slots||{}; } else { periods=DEFAULT_PERIODS(); slots={}; }
+  }catch(e){ periods=DEFAULT_PERIODS(); slots={}; } } else { periods=DEFAULT_PERIODS(); slots={}; }
+  renderPeriodsEditor(); renderHorarioGrid();
+}
+function renderPeriodsEditor(){
+  const wrap=document.getElementById('periodsEditor'); wrap.innerHTML='';
+  periods.forEach((p,i)=>{
+    const row=document.createElement('div'); row.className='row'; row.style.marginBottom='4px';
+    row.innerHTML=`<input type="text" class="pdLabel" data-i="${i}" value="${p.label}" placeholder="Nombre del periodo" style="flex:2">
+      <input type="text" class="pdTime" data-i="${i}" value="${p.time||''}" placeholder="Ej. 8:00–8:50" style="flex:1">
+      <button class="btn small secondary" data-delp="${i}">✕</button>`;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-delp]').forEach(b=>b.onclick=()=>{ periods=readPeriodsEditor(); periods.splice(parseInt(b.dataset.delp),1); renderPeriodsEditor(); });
+}
+function readPeriodsEditor(){
+  const labels=[...document.querySelectorAll('.pdLabel')], times=[...document.querySelectorAll('.pdTime')];
+  return labels.map((l,i)=>({label:l.value||('Periodo '+(i+1)), time:times[i].value}));
+}
+document.getElementById('btnAddPeriod').onclick=()=>{ periods=readPeriodsEditor(); periods.push({label:'',time:''}); renderPeriodsEditor(); };
+document.getElementById('btnSavePeriods').onclick=async()=>{
+  periods=readPeriodsEditor();
+  if(db) await db.doc('horario/config').set({periods,slots});
+  renderHorarioGrid(); renderInicio(); alert('Periodos guardados.');
+};
+function renderHorarioGrid(){
+  const wrap=document.getElementById('horarioGrid'); if(!wrap) return;
+  if(!periods.length){ wrap.innerHTML='<span class="muted">Agrega al menos un periodo arriba.</span>'; return; }
+  let html='<table><thead><tr><th>Periodo</th>'+DIAS.map(d=>'<th>'+d+'</th>').join('')+'</tr></thead><tbody>';
+  periods.forEach((p,pi)=>{
+    html+='<tr><td><strong>'+p.label+'</strong>'+(p.time?'<div class="muted">'+p.time+'</div>':'')+'</td>';
+    DIAS.forEach((d,di)=>{
+      const key=di+'_'+pi; const val=slots[key]||'';
+      html+=`<td><select data-key="${key}" style="width:130px"><option value="">— Libre —</option>`+groups.map(g=>`<option value="${g.id}" ${val===g.id?'selected':''}>${g.name} · ${g.materia||''}</option>`).join('')+'</select></td>';
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table>'; wrap.innerHTML=html;
+  wrap.querySelectorAll('select[data-key]').forEach(sel=>sel.onchange=async()=>{
+    if(sel.value) slots[sel.dataset.key]=sel.value; else delete slots[sel.dataset.key];
+    if(db) await db.doc('horario/config').set({periods,slots});
+    renderInicio();
+  });
+}
+async function renderInicioHorario(){
+  const wrap=document.getElementById('inHorario'); if(!wrap) return;
+  const jsDay=new Date().getDay(); const di=jsDay-1;
+  if(di<0||di>4){ wrap.innerHTML='Fin de semana — sin clases programadas.'; return; }
+  const today=isoToday(); const rows=[];
+  for(let pi=0;pi<periods.length;pi++){
+    const gid=slots[di+'_'+pi]; if(!gid) continue;
+    const g=currentGroup(gid); if(!g) continue;
+    let done=false; if(db){ try{ const d=await db.doc('attendance/'+gid+'_'+today).get(); done=d.exists; }catch(e){} }
+    rows.push(`<div class="groupItem"><div><strong>${periods[pi].label}</strong>${periods[pi].time?' · '+periods[pi].time:''} — ${g.name} · ${g.materia||''} ${done?'<span class="tag present">Lista tomada</span>':''}</div><button class="btn small secondary" data-gohorario="${gid}">Pasar lista</button></div>`);
+  }
+  wrap.innerHTML = rows.length? rows.join('') : 'No tienes clases registradas en tu horario para hoy. Configúralo en la pestaña "Horario".';
+  wrap.querySelectorAll('[data-gohorario]').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+    document.querySelector('[data-tab=asistencia]').classList.add('active');
+    ['inicio','grupos','alumnos','asistencia','plano','horario','diario','rubricas','calif','examenes','docs'].forEach(t=>document.getElementById('tab-'+t).style.display = t==='asistencia'?'block':'none');
+    const aSel=document.getElementById('aGroup'); aSel.value=b.dataset.gohorario; renderQuickSwitch('aGroup','aQuickSwitch'); renderAttendanceTable();
+  });
+}
+
+// Página de Inicio
+function isoToday(){ return new Date().toISOString().slice(0,10); }
+function esToday(){ return new Date().toLocaleDateString('es-MX'); }
+async function renderInicio(){
+  document.getElementById('inicioSaludo').textContent='Bienvenido a tu Hub Docente';
+  document.getElementById('inicioFecha').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('inGrupos').textContent=groups.length;
+  document.getElementById('inAlumnos').textContent=groups.reduce((a,g)=>a+((g.students||[]).length),0);
+  const today=isoToday(); let taken=0; const pendientes=[];
+  for(const g of groups){
+    let exists=false;
+    if(db){ try{ const d=await db.doc('attendance/'+g.id+'_'+today).get(); exists=d.exists; }catch(e){} }
+    if(exists) taken++; else pendientes.push(g.name+(g.materia?' · '+g.materia:''));
+  }
+  document.getElementById('inAsistHoy').textContent=taken+'/'+groups.length+' grupos';
+  renderInicioHorario();
+  document.getElementById('inPendientes').innerHTML = pendientes.length? pendientes.map(n=>'<div>• '+n+'</div>').join('') : (groups.length? 'Ya pasaste lista en todos tus grupos hoy.' : 'Aún no tienes grupos.');
+  let citHoy=[];
+  if(db){ try{ const snap=await db.collection('citatorios').get();
+    snap.docs.forEach(d=>{ (d.data().entries||[]).forEach(e=>{ if(e.citaFecha===today) citHoy.push(e); }); }); }catch(e){} }
+  document.getElementById('inCitatorios').innerHTML = citHoy.length? citHoy.map(e=>'<div>• '+(e.destinatario||'')+(e.citaHora?' — '+e.citaHora:'')+'</div>').join('') : 'Sin citatorios programados para hoy.';
+  let diarioHoy=[];
+  if(db){ try{ const snap=await db.collection('diario').get();
+    snap.docs.forEach(d=>{ const g=groups.find(x=>x.id===d.id); (d.data().entries||[]).forEach(e=>{ if(e.date===esToday()) diarioHoy.push({g,e}); }); }); }catch(e){} }
+  document.getElementById('inDiario').innerHTML = diarioHoy.length? diarioHoy.map(({g,e})=>'<div>• '+(g?g.name:'')+': '+e.text+'</div>').join('') : 'Sin registros en el diario hoy.';
+  renderTareasHoy();
+}
+async function renderTareasHoy(){
+  const wrap=document.getElementById('inTareas'); let items=[];
+  if(db){ try{ const d=await db.doc('agenda/'+isoToday()).get(); items=(d.exists&&d.data().items)||[]; }catch(e){} }
+  wrap.innerHTML = items.length? items.map((it,i)=>`<div class="chkrow"><input type="checkbox" data-ti="${i}" ${it.done?'checked':''}><span style="${it.done?'text-decoration:line-through;color:var(--sub)':''}">${it.text}</span><button class="btn small secondary" data-tdel="${i}">✕</button></div>`).join('') : 'Sin pendientes agregados.';
+  wrap.querySelectorAll('[data-ti]').forEach(cb=>cb.onchange=async()=>{ items[+cb.dataset.ti].done=cb.checked; await db.doc('agenda/'+isoToday()).set({items}); renderTareasHoy(); });
+  wrap.querySelectorAll('[data-tdel]').forEach(b=>b.onclick=async()=>{ items.splice(+b.dataset.tdel,1); await db.doc('agenda/'+isoToday()).set({items}); renderTareasHoy(); });
+}
+document.getElementById('btnAddTarea').onclick=async()=>{
+  const txt=document.getElementById('inTareaTexto').value.trim(); if(!txt) return;
+  let items=[]; if(db){ try{ const d=await db.doc('agenda/'+isoToday()).get(); items=(d.exists&&d.data().items)||[]; }catch(e){} }
+  items.push({text:txt,done:false}); await db.doc('agenda/'+isoToday()).set({items});
+  document.getElementById('inTareaTexto').value=''; renderTareasHoy();
+};
+
+loadHorario();
 initDb();
 </script>
 </body>
